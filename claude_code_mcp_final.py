@@ -84,7 +84,7 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Claude Code CLI as MCP Server")
     parser.add_argument("--host", default="127.0.0.1", help="Host to bind to")
-    parser.add_argument("--port", type=int, default=8005, help="Port to bind to")
+    parser.add_argument("--port", type=int, default=8000, help="Port to bind to")
     
     args = parser.parse_args()
     
@@ -113,6 +113,6 @@ if __name__ == "__main__":
     print(f'  }}', file=sys.stderr)
     print(f'}}', file=sys.stderr)
     
-    # Run with HTTP transport  
+    # Run with HTTP transport
     # Use streamable-http for production HTTP transport
     mcp.run(transport="streamable-http", mount_path="/mcp")
