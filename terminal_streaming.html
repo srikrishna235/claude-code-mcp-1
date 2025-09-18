@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code Terminal - Real-time Streaming</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        #header {
+            background: #2d2d30;
+            padding: 10px 20px;
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        #title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #cccccc;
+        }
+
+        #status {
+            padding: 4px 12px;
+            background: #1e1e1e;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        #status.connected {
+            color: #4ec9b0;
+            border: 1px solid #4ec9b0;
+        }
+
+        #status.disconnected {
+            color: #f48771;
+            border: 1px solid #f48771;
+        }
+
+        #terminal {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            font-family: 'Cascadia Code', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .entry {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            color: #569cd6;
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .user-message:before {
+            content: '>';
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        .response {
+            color: #d4d4d4;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .notification {
+            color: #608b4e;
+            font-style: italic;
+            opacity: 0.9;
+            padding: 2px 0;
+            animation: slideIn 0.2s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .notification.info {
+            color: #3794ff;
+        }
+
+        .notification.debug {
+            color: #808080;
+            font-size: 12px;
+        }
+
+        .notification.error {
+            color: #f48771;
+        }
+
+        .notification.progress {
+            color: #dcdcaa;
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            height: 3px;
+            background: #3e3e42;
+            margin: 5px 0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4ec9b0;
+            transition: width 0.3s ease;
+        }
+
+        .system-message {
+            color: #808080;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        .thinking {
+            color: #dcdcaa;
+            font-style: italic;
+            opacity: 0.7;
+        }
+
+        .thinking:after {
+            content: '...';
+            animation: dots 1.5s infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        #input-container {
+            background: #2d2d30;
+            border-top: 1px solid #3e3e42;
+            padding: 20px;
+        }
+
+        #input {
+            width: 100%;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border: 1px solid #3e3e42;
+            padding: 12px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 50px;
+            max-height: 200px;
+            border-radius: 4px;
+        }
+
+        #input:focus {
+            outline: none;
+            border-color: #007acc;
+        }
+
+        #controls {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 8px 16px;
+            background: #007acc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        button:hover {
+            background: #1a85d6;
+        }
+
+        button:disabled {
+            background: #3e3e42;
+            cursor: not-allowed;
+        }
+
+        button.secondary {
+            background: #3e3e3e;
+        }
+
+        button.secondary:hover {
+            background: #4e4e4e;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #3e3e42;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4e4e52;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <div id="title">Claude Code Terminal - Real-time</div>
+        <div id="status" class="disconnected">Disconnected</div>
+    </div>
+
+    <div id="terminal"></div>
+
+    <div id="input-container">
+        <textarea id="input" placeholder="Type your command or question..." onkeydown="handleKeyPress(event)"></textarea>
+        <div id="controls">
+            <button id="send-btn" onclick="sendCommand()">Send</button>
+            <button class="secondary" onclick="clearTerminal()">Clear</button>
+        </div>
+    </div>
+
+    <script>
+        // MCP Server configuration
+        const MCP_URL = 'http://127.0.0.1:8001/mcp';  // Using CORS proxy
+        let sessionId = null;
+        let isConnected = false;
+        let currentResponseDiv = null;
+        let currentProgressBar = null;
+
+        // Initialize on page load
+        window.onload = async function() {
+            await connectToServer();
+        };
+
+        // Connect to MCP server
+        async function connectToServer() {
+            try {
+                updateStatus('Connecting...', false);
+                
+                // Initialize session
+                const response = await fetch(MCP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json, text/event-stream'
+                    },
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        id: 1,
+                        method: 'initialize',
+                        params: {
+                            protocolVersion: '2024-11-05',
+                            capabilities: {},
+                            clientInfo: {
+                                name: 'claude-code-terminal-streaming',
+                                version: '1.0.0'
+                            }
+                        }
+                    })
+                });
+
+                // Get session ID from headers
+                sessionId = response.headers.get('mcp-session-id');
+                console.log('Session ID:', sessionId);
+                
+                if (sessionId) {
+                    // Send initialized notification
+                    await fetch(MCP_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json, text/event-stream',
+                            'Mcp-Session-Id': sessionId
+                        },
+                        body: JSON.stringify({
+                            jsonrpc: '2.0',
+                            method: 'notifications/initialized',
+                            params: {}
+                        })
+                    });
+                    
+                    isConnected = true;
+                    updateStatus('Connected', true);
+                    appendToTerminal('system', 'Connected to Claude Code MCP Server (Real-time Streaming)');
+                    appendToTerminal('system', 'Type your commands below. You will see live updates as Claude processes your request.');
+                    appendToTerminal('system', '');
+                } else {
+                    updateStatus('Failed to get session', false);
+                    appendToTerminal('system', 'Failed to establish session with MCP server');
+                }
+            } catch (error) {
+                console.error('Connection error:', error);
+                updateStatus('Connection failed', false);
+                appendToTerminal('system', `Error: ${error.message}`);
+            }
+        }
+
+        // Send command to Claude
+        async function sendCommand() {
+            const input = document.getElementById('input');
+            const command = input.value.trim();
+            
+            if (!command) return;
+            
+            if (!isConnected) {
+                await connectToServer();
+                return;
+            }
+
+            // Clear input
+            input.value = '';
+            input.style.height = 'auto';
+            
+            // Show command in terminal
+            appendToTerminal('user', command);
+            
+            // Create response container
+            const responseContainer = createResponseContainer();
+            
+            // Add thinking message
+            const thinkingId = appendThinking();
+            
+            try {
+                const response = await fetch(MCP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json, text/event-stream',
+                        'Mcp-Session-Id': sessionId
+                    },
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        id: Date.now(),
+                        method: 'tools/call',
+                        params: {
+                            name: 'claude_execute',
+                            arguments: {
+                                prompt: command,
+                                working_dir: process.cwd(),
+                                allowed_tools: null
+                            }
+                        }
+                    })
+                });
+
+                // Remove thinking message
+                removeThinking(thinkingId);
+                
+                // Stream response for real-time output
+                if (response.headers.get('content-type')?.includes('event-stream')) {
+                    await handleStreamingResponse(response, responseContainer);
+                } else {
+                    // Fallback to non-streaming
+                    const text = await response.text();
+                    console.log('Non-streaming response:', text);
+                    try {
+                        const data = JSON.parse(text);
+                        if (data.result && data.result.content) {
+                            const content = data.result.content[0].text;
+                            responseContainer.innerHTML = formatResponse(content);
+                        }
+                    } catch (e) {
+                        responseContainer.textContent = 'Error parsing response';
+                    }
+                }
+                
+            } catch (error) {
+                removeThinking(thinkingId);
+                appendToTerminal('error', `Error: ${error.message}`);
+            }
+        }
+
+        // Handle streaming SSE response
+        async function handleStreamingResponse(response, responseContainer) {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let hasContent = false;
+            
+            while (true) {
+                const {done, value} = await reader.read();
+                if (done) break;
+                
+                buffer += decoder.decode(value, {stream: true});
+                const lines = buffer.split('\n');
+                buffer = lines.pop(); // Keep incomplete line in buffer
+                
+                for (const line of lines) {
+                    if (line.startsWith('event: ')) {
+                        const eventType = line.substring(7);
+                        
+                    } else if (line.startsWith('data: ')) {
+                        try {
+                            const data = JSON.parse(line.substring(6));
+                            
+                            // Handle different message types
+                            if (data.method === 'notifications/message') {
+                                // Logging notification
+                                const params = data.params;
+                                const level = params.level || 'info';
+                                const message = params.message || '';
+                                
+                                if (message) {
+                                    appendNotification(responseContainer, message, level);
+                                    hasContent = true;
+                                }
+                                
+                            } else if (data.method === 'notifications/progress') {
+                                // Progress notification
+                                const params = data.params;
+                                const progress = params.progress || 0;
+                                const total = params.total || 100;
+                                const message = params.message || '';
+                                
+                                updateProgress(responseContainer, progress, total, message);
+                                hasContent = true;
+                                
+                            } else if (data.result) {
+                                // Final result
+                                if (data.result.content) {
+                                    for (const item of data.result.content) {
+                                        if (item.type === 'text') {
+                                            // Clear notifications and show final result
+                                            responseContainer.innerHTML = formatResponse(item.text);
+                                            hasContent = true;
+                                        }
+                                    }
+                                }
+                            } else if (data.error) {
+                                // Error response
+                                appendNotification(responseContainer, `Error: ${data.error.message}`, 'error');
+                                hasContent = true;
+                            }
+                        } catch (e) {
+                            console.debug('Parse error for line:', line, e);
+                        }
+                    }
+                }
+            }
+            
+            if (!hasContent) {
+                responseContainer.innerHTML = '<span class="system-message">No output</span>';
+            }
+            
+            // Scroll to bottom
+            const terminal = document.getElementById('terminal');
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        // Create response container with progress bar
+        function createResponseContainer() {
+            const terminal = document.getElementById('terminal');
+            const entry = document.createElement('div');
+            entry.className = 'entry';
+            
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            progressBar.style.display = 'none';
+            progressBar.innerHTML = '<div class="progress-fill" style="width: 0%"></div>';
+            
+            const responseDiv = document.createElement('div');
+            responseDiv.className = 'response';
+            
+            entry.appendChild(progressBar);
+            entry.appendChild(responseDiv);
+            terminal.appendChild(entry);
+            
+            currentResponseDiv = responseDiv;
+            currentProgressBar = progressBar;
+            
+            return responseDiv;
+        }
+
+        // Append notification to response
+        function appendNotification(container, message, level) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${level}`;
+            notification.textContent = message;
+            container.appendChild(notification);
+            
+            // Auto-scroll
+            const terminal = document.getElementById('terminal');
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        // Update progress bar
+        function updateProgress(container, progress, total, message) {
+            if (currentProgressBar) {
+                currentProgressBar.style.display = 'block';
+                const percentage = (progress / total) * 100;
+                currentProgressBar.querySelector('.progress-fill').style.width = percentage + '%';
+                
+                if (message) {
+                    appendNotification(container, `📊 ${message} (${Math.round(percentage)}%)`, 'progress');
+                }
+            }
+        }
+
+        // Helper functions
+        function appendToTerminal(type, message) {
+            const terminal = document.getElementById('terminal');
+            const entry = document.createElement('div');
+            entry.className = 'entry';
+            
+            if (type === 'user') {
+                entry.innerHTML = `<div class="user-message">${escapeHtml(message)}</div>`;
+            } else if (type === 'system') {
+                entry.innerHTML = `<div class="system-message">${escapeHtml(message)}</div>`;
+            } else if (type === 'error') {
+                entry.innerHTML = `<div class="notification error">${escapeHtml(message)}</div>`;
+            } else {
+                entry.innerHTML = `<div class="response">${formatResponse(message)}</div>`;
+            }
+            
+            terminal.appendChild(entry);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function appendThinking() {
+            const terminal = document.getElementById('terminal');
+            const entry = document.createElement('div');
+            entry.className = 'entry';
+            entry.id = 'thinking-' + Date.now();
+            entry.innerHTML = '<div class="thinking">Claude is thinking</div>';
+            terminal.appendChild(entry);
+            return entry.id;
+        }
+
+        function removeThinking(id) {
+            const element = document.getElementById(id);
+            if (element) element.remove();
+        }
+
+        function formatResponse(text) {
+            // Simple formatting for code blocks and markdown
+            text = escapeHtml(text);
+            
+            // Format code blocks
+            text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+                return `<pre><code>${code}</code></pre>`;
+            });
+            
+            // Format inline code
+            text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+            
+            // Format bold
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            return text;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function clearTerminal() {
+            const terminal = document.getElementById('terminal');
+            terminal.innerHTML = '';
+            appendToTerminal('system', 'Terminal cleared');
+        }
+
+        function updateStatus(text, connected) {
+            const status = document.getElementById('status');
+            status.textContent = text;
+            status.className = connected ? 'connected' : 'disconnected';
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendCommand();
+            }
+        }
+
+        // Get current working directory (fallback)
+        window.process = {
+            cwd: () => window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'))
+        };
+    </script>
+</body>
+</html>
