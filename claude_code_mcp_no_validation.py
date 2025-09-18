@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 """
-Claude Code CLI as MCP Server - With CORS Support
-Wraps actual Claude Code CLI using FastMCP
+Claude Code CLI as MCP Server - With CORS Support (No Validation)
+Wraps actual Claude Code CLI using FastMCP without parameter validation
 """
 
 import os
 import sys
 import subprocess
 import shutil
-from typing import Optional
+from typing import Optional, Any
 from mcp.server.fastmcp import FastMCP
 from starlette.applications import Starlette
 from starlette.middleware.cors import CORSMiddleware
 import uvicorn
 import asyncio
+import json
 
 # Check if Claude Code CLI is installed
 CLAUDE_CLI_PATH = shutil.which("claude")
@@ -24,27 +25,34 @@ if not CLAUDE_CLI_PATH:
 # Initialize MCP server
 mcp = FastMCP("claude-code")
 
-# Phase 1: Single tool that wraps Claude Code CLI
+# Raw tool that accepts any arguments
 @mcp.tool()
-async def claude_execute(prompt: str) -> str:
+async def claude_execute(**kwargs) -> str:
     """
     Execute a task using Claude Code CLI's AI capabilities.
-    
-    Args:
-        prompt: Natural language description of the task
-    
-    Returns:
-        Claude Code's response
+    Accepts any arguments to bypass validation.
     """
+    # Extract expected arguments with defaults
+    prompt = kwargs.get('prompt', '')
+    working_dir = kwargs.get('working_dir', None)
+    allowed_tools = kwargs.get('allowed_tools', None)
+    
+    if not prompt:
+        return "Error: 'prompt' is required"
+    
     try:
         # Build command
         cmd = [CLAUDE_CLI_PATH, "-p", prompt]  # Use -p for print mode
         
+        # Add allowed tools if specified
+        if allowed_tools:
+            cmd.extend(["--allowedTools", allowed_tools])
+        
         # Skip permissions for programmatic usage
         cmd.append("--dangerously-skip-permissions")
         
-        # Use current working directory
-        cwd = os.getcwd()
+        # Set working directory
+        cwd = os.path.expanduser(working_dir) if working_dir else os.getcwd()
         
         # Execute Claude Code CLI
         result = subprocess.run(
@@ -97,13 +105,13 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    print(f"Claude Code MCP Server (CORS Enabled)", file=sys.stderr)
-    print(f"======================================", file=sys.stderr)
+    print(f"Claude Code MCP Server (No Validation)", file=sys.stderr)
+    print(f"========================================", file=sys.stderr)
     print(f"Claude CLI: {CLAUDE_CLI_PATH}", file=sys.stderr)
     print(f"Endpoint: http://{args.host}:{args.port}/mcp", file=sys.stderr)
     print(f"", file=sys.stderr)
     print(f"CORS enabled for browser access", file=sys.stderr)
-    print(f"Terminal UI: http://127.0.0.1:8080", file=sys.stderr)
+    print(f"Parameter validation bypassed with **kwargs", file=sys.stderr)
     
     # Run the server
     asyncio.run(run_server(args.host, args.port))
