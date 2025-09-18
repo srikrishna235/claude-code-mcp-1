@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Claude Code CLI as MCP Server - With CORS Support
-Wraps actual Claude Code CLI using FastMCP
+Simple Claude Code MCP Server
+Direct MCP server without complex mounting
 """
 
 import os
@@ -10,10 +10,7 @@ import subprocess
 import shutil
 from typing import Optional
 from mcp.server.fastmcp import FastMCP
-from starlette.applications import Starlette
 from starlette.middleware.cors import CORSMiddleware
-from starlette.routing import Route
-from starlette.responses import JSONResponse
 import uvicorn
 import asyncio
 
@@ -26,7 +23,7 @@ if not CLAUDE_CLI_PATH:
 # Initialize MCP server
 mcp = FastMCP("claude-code")
 
-# Phase 1: Single tool that wraps Claude Code CLI
+# Simple tool that wraps Claude Code CLI
 @mcp.tool()
 async def claude_execute(
     prompt: str,
@@ -42,7 +39,7 @@ async def claude_execute(
         allowed_tools: Comma-separated list of allowed tools (e.g., "Read,Write,Edit,Bash")
     
     Returns:
-        Claude Code's response
+        Claude Code's response with intermediate steps
     """
     try:
         # Build command (without -p flag to show intermediate steps)
@@ -79,60 +76,41 @@ async def claude_execute(
     except Exception as e:
         return f"Error: {str(e)}"
 
-# Create app with CORS support
-def create_app():
-    """Create Starlette app with CORS and MCP mounted"""
-    # Get the streamable HTTP app from FastMCP
-    # This needs to be run in an async context with proper lifecycle
-    app = Starlette()
+# Run server
+async def run_server(host="127.0.0.1", port=8000):
+    """Run the MCP server with CORS"""
+    # Get the MCP ASGI app directly
+    app = mcp.streamable_http_app()
     
     # Add CORS middleware
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],  # Allow all origins for dev
+        allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
-        expose_headers=["Mcp-Session-Id", "mcp-session-id"]
+        expose_headers=["Mcp-Session-Id", "mcp-session-id", "*"]
     )
     
-    return app
-
-# Run server with proper lifecycle management
-async def run_server(host="127.0.0.1", port=8000):
-    """Run the server with CORS support"""
-    # Create the app
-    app = create_app()
-    
-    # Get the MCP ASGI app and mount it
-    mcp_app = mcp.streamable_http_app()
-    app.mount("/mcp", mcp_app)
-    
-    # Add lifespan management for session manager
-    async def run_with_lifecycle():
-        async with mcp.session_manager.run():
-            config = uvicorn.Config(app, host=host, port=port, log_level="info")
-            server = uvicorn.Server(config)
-            await server.serve()
-    
-    await run_with_lifecycle()
+    # Run with uvicorn
+    config = uvicorn.Config(app, host=host, port=port, log_level="info")
+    server = uvicorn.Server(config)
+    await server.serve()
 
 if __name__ == "__main__":
     import argparse
     
-    parser = argparse.ArgumentParser(description="Claude Code CLI as MCP Server with CORS")
+    parser = argparse.ArgumentParser(description="Simple Claude Code MCP Server")
     parser.add_argument("--host", default="127.0.0.1", help="Host to bind to")
     parser.add_argument("--port", type=int, default=8000, help="Port to bind to")
     
     args = parser.parse_args()
     
-    print(f"Claude Code MCP Server (CORS Enabled)", file=sys.stderr)
-    print(f"======================================", file=sys.stderr)
+    print(f"Simple Claude Code MCP Server", file=sys.stderr)
+    print(f"=============================", file=sys.stderr)
     print(f"Claude CLI: {CLAUDE_CLI_PATH}", file=sys.stderr)
     print(f"Endpoint: http://{args.host}:{args.port}/mcp", file=sys.stderr)
     print(f"", file=sys.stderr)
-    print(f"CORS enabled for browser access", file=sys.stderr)
-    print(f"Terminal UI: http://127.0.0.1:8080", file=sys.stderr)
     
     # Run the server
     asyncio.run(run_server(args.host, args.port))

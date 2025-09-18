@@ -37,11 +37,11 @@ async def claude_execute(
         allowed_tools: Comma-separated list of allowed tools (e.g., "Read,Write,Edit,Bash")
     
     Returns:
-        Claude Code's response with full event stream
+        Claude Code's response including intermediate steps
     """
     try:
-        # Build command with stream-json output for full visibility
-        cmd = [CLAUDE_CLI_PATH, "-p", prompt, "--output-format", "stream-json", "--verbose"]
+        # Build command - use default text format to see all output including intermediate steps
+        cmd = [CLAUDE_CLI_PATH, "-p", prompt]
         
         # Add allowed tools if specified
         if allowed_tools:
@@ -53,95 +53,44 @@ async def claude_execute(
         # Set working directory
         cwd = os.path.expanduser(working_dir) if working_dir else os.getcwd()
         
-        # Execute Claude Code CLI
-        result = subprocess.run(
+        # Execute Claude Code CLI with real-time output capture
+        process = subprocess.Popen(
             cmd,
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,  # Combine stderr with stdout
             text=True,
             cwd=cwd,
-            timeout=300,  # 5 minutes
-            env={**os.environ}
+            env={**os.environ},
+            bufsize=1,  # Line buffered
+            universal_newlines=True
         )
         
-        # Process stream-json output
-        if result.returncode == 0:
-            import json
-            lines = result.stdout.strip().split('\n')
-            events = []
-            final_text = ""
-            
-            for line in lines:
+        # Collect all output including intermediate steps
+        output_lines = []
+        try:
+            # Read output line by line as it comes
+            for line in iter(process.stdout.readline, ''):
                 if line:
-                    try:
-                        event = json.loads(line)
-                        event_type = event.get('type')
-                        
-                        if event_type == 'assistant':
-                            msg = event.get('message', {})
-                            content = msg.get('content', [])
-                            
-                            for item in content:
-                                if item.get('type') == 'text':
-                                    # Regular text response
-                                    text = item.get('text', '')
-                                    if text:
-                                        events.append({'type': 'text', 'content': text})
-                                        final_text = text  # Keep last text as final
-                                elif item.get('type') == 'tool_use':
-                                    # Tool usage
-                                    tool_name = item.get('name', 'Unknown')
-                                    tool_input = item.get('input', {})
-                                    events.append({
-                                        'type': 'tool_use',
-                                        'name': tool_name,
-                                        'input': tool_input
-                                    })
-                                    
-                        elif event_type == 'user':
-                            # Tool result
-                            msg = event.get('message', {})
-                            content = msg.get('content', [])
-                            for item in content:
-                                if item.get('type') == 'tool_result':
-                                    result_text = item.get('content', '')
-                                    events.append({
-                                        'type': 'tool_result', 
-                                        'content': result_text
-                                    })
-                                    
-                        elif event_type == 'result':
-                            # Final result
-                            final_text = event.get('result', final_text)
-                            
-                    except json.JSONDecodeError:
-                        continue
+                    output_lines.append(line.rstrip())
             
-            # Format output for display
-            if events:
-                output_parts = []
-                for event in events:
-                    if event['type'] == 'text':
-                        output_parts.append(event['content'])
-                    elif event['type'] == 'tool_use':
-                        name = event['name']
-                        input_str = json.dumps(event['input'], indent=2) if isinstance(event['input'], dict) else str(event['input'])
-                        output_parts.append(f"\n🔧 Using tool: {name}\n{input_str}")
-                    elif event['type'] == 'tool_result':
-                        output_parts.append(f"   → {event['content'][:200]}...")
-                
-                # Add final result if different from events
-                if final_text and final_text not in output_parts:
-                    output_parts.append(f"\n✅ {final_text}")
-                    
-                return '\n'.join(output_parts)
+            # Wait for process to complete
+            process.wait(timeout=300)
+            
+            # Join all output lines preserving Claude's formatting
+            full_output = '\n'.join(output_lines)
+            
+            if process.returncode == 0:
+                return full_output if full_output else "Command completed successfully"
             else:
-                return final_text or "No response"
+                return f"Error (exit {process.returncode}):\n{full_output}"
                 
-        else:
-            return f"Error (exit {result.returncode}): {result.stderr or 'Unknown error'}"
-            
-    except subprocess.TimeoutExpired:
-        return "Task timed out after 5 minutes"
+        except subprocess.TimeoutExpired:
+            process.kill()
+            return "Task timed out after 5 minutes"
+        finally:
+            if process.stdout:
+                process.stdout.close()
+                
     except Exception as e:
         return f"Error: {str(e)}"
 

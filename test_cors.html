@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CORS Test</title>
+</head>
+<body>
+    <h1>CORS Test</h1>
+    <button onclick="test()">Test Connection</button>
+    <pre id="output"></pre>
+    
+    <script>
+        async function test() {
+            const output = document.getElementById('output');
+            output.textContent = 'Testing...\n';
+            
+            try {
+                const response = await fetch('http://127.0.0.1:8001/mcp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json, text/event-stream'
+                    },
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        id: 1,
+                        method: 'initialize',
+                        params: {
+                            protocolVersion: '2024-11-05',
+                            capabilities: {},
+                            clientInfo: {
+                                name: 'test',
+                                version: '1.0'
+                            }
+                        }
+                    })
+                });
+                
+                output.textContent += `Status: ${response.status}\n`;
+                output.textContent += `Headers:\n`;
+                for (const [key, value] of response.headers.entries()) {
+                    output.textContent += `  ${key}: ${value}\n`;
+                }
+                
+                const sessionId = response.headers.get('mcp-session-id');
+                output.textContent += `\nSession ID: ${sessionId}\n`;
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    output.textContent += `\nResponse (first 500 chars):\n${text.substring(0, 500)}\n`;
+                }
+            } catch (e) {
+                output.textContent += `Error: ${e}\n`;
+            }
+        }
+    </script>
+</body>
+</html>

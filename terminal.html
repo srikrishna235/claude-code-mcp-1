@@ -273,7 +273,7 @@
                         id: 1,
                         method: 'initialize',
                         params: {
-                            protocolVersion: '2025-03-26',
+                            protocolVersion: '2024-11-05',
                             capabilities: {},
                             clientInfo: {
                                 name: 'claude-code-terminal',
@@ -285,6 +285,8 @@
 
                 // Get session ID from headers
                 sessionId = response.headers.get('mcp-session-id');
+                console.log('Response headers:', [...response.headers.entries()]);
+                console.log('Session ID:', sessionId);
                 
                 if (sessionId) {
                     // Send initialized notification
