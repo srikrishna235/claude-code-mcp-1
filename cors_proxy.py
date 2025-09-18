@@ -1,85 +1,79 @@
 #!/usr/bin/env python3
 """
 CORS Proxy for MCP Server
-Adds proper CORS support for browser access
+Adds CORS headers to MCP server responses for browser access
 """
 
-from flask import Flask, request, jsonify, Response
-import requests
-import json
+from fastapi import FastAPI, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
+import httpx
+import uvicorn
+import asyncio
 
-app = Flask(__name__)
+app = FastAPI()
 
-# MCP server backend
-MCP_BACKEND = "http://127.0.0.1:8000/mcp"
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"]  # Expose all headers including Mcp-Session-Id
+)
 
-@app.route('/mcp', methods=['OPTIONS', 'POST', 'GET'])
-def proxy():
-    # Handle preflight
-    if request.method == 'OPTIONS':
-        response = Response()
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Methods'] = 'POST, GET, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Accept, Mcp-Session-Id'
-        response.headers['Access-Control-Expose-Headers'] = 'Mcp-Session-Id, mcp-session-id'
-        return response, 200
+# MCP server URL (running on port 8001)
+MCP_SERVER_URL = "http://127.0.0.1:8001"
+
+@app.api_route("/{path:path}", methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"])
+async def proxy(request: Request, path: str):
+    """Proxy all requests to MCP server with CORS headers"""
     
-    # Proxy actual requests
-    try:
-        # Forward headers
-        headers = {
-            'Content-Type': request.headers.get('Content-Type', 'application/json'),
-            'Accept': request.headers.get('Accept', 'application/json, text/event-stream')
-        }
+    # Build target URL
+    target_url = f"{MCP_SERVER_URL}/{path}"
+    
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        # Get request body
+        body = await request.body() if request.method in ["POST", "PUT"] else None
         
-        # Include session ID if present
-        session_id = request.headers.get('Mcp-Session-Id')
-        if session_id:
-            headers['Mcp-Session-Id'] = session_id
+        # Forward headers (except host)
+        headers = dict(request.headers)
+        headers.pop("host", None)
         
-        # Forward the request
-        if request.method == 'POST':
-            backend_response = requests.post(
-                MCP_BACKEND,
-                headers=headers,
-                data=request.data,
-                stream=True
-            )
-        else:
-            backend_response = requests.get(
-                MCP_BACKEND,
-                headers=headers,
-                stream=True
-            )
-        
-        # Create response
-        def generate():
-            for chunk in backend_response.iter_content(chunk_size=1024):
-                if chunk:
-                    yield chunk
-        
-        response = Response(
-            generate(),
-            status=backend_response.status_code,
-            headers=dict(backend_response.headers)
+        # Make request to MCP server
+        response = await client.request(
+            method=request.method,
+            url=target_url,
+            headers=headers,
+            content=body
         )
         
-        # Add CORS headers
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Credentials'] = 'true'
-        response.headers['Access-Control-Expose-Headers'] = 'Mcp-Session-Id, mcp-session-id'
-        
-        return response
-        
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        # Return response with all headers preserved
+        return Response(
+            content=response.content,
+            status_code=response.status_code,
+            headers=dict(response.headers),
+            media_type=response.headers.get("content-type", "application/json")
+        )
 
-if __name__ == '__main__':
-    print("CORS Proxy for MCP Server")
-    print("=========================")
-    print("Proxying: http://127.0.0.1:8000/mcp")
-    print("Listening on: http://127.0.0.1:8001/mcp")
-    print("")
-    print("Update terminal.html to use port 8001")
+if __name__ == "__main__":
+    import sys
+    import argparse
     
-    app.run(host='127.0.0.1', port=8001, debug=False)
+    parser = argparse.ArgumentParser(description="CORS Proxy for MCP Server")
+    parser.add_argument("--port", type=int, default=8000, help="Proxy port")
+    parser.add_argument("--mcp-port", type=int, default=8001, help="MCP server port")
+    
+    args = parser.parse_args()
+    
+    # Update MCP server URL
+    MCP_SERVER_URL = f"http://127.0.0.1:{args.mcp_port}"
+    
+    print(f"CORS Proxy for MCP Server", file=sys.stderr)
+    print(f"========================", file=sys.stderr)
+    print(f"Proxy listening on: http://127.0.0.1:{args.port}", file=sys.stderr)
+    print(f"Forwarding to MCP: {MCP_SERVER_URL}", file=sys.stderr)
+    print(f"", file=sys.stderr)
+    print(f"Browser can now connect to http://127.0.0.1:{args.port}/mcp", file=sys.stderr)
+    
+    uvicorn.run(app, host="127.0.0.1", port=args.port, log_level="info")
