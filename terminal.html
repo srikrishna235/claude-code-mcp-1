@@ -89,6 +89,31 @@
             white-space: pre-wrap;
             font-family: inherit;
         }
+        
+        .tool-use {
+            background: #2a2d3a;
+            border-left: 3px solid #569cd6;
+            padding: 8px;
+            margin: 8px 0 8px 20px;
+            border-radius: 4px;
+        }
+        
+        .tool-name {
+            color: #4ec9b0;
+            font-weight: bold;
+        }
+        
+        .tool-input {
+            color: #9cdcfe;
+            margin-top: 4px;
+            font-size: 12px;
+        }
+        
+        .tool-result {
+            color: #808080;
+            margin-left: 20px;
+            font-style: italic;
+        }
 
         .response.error {
             color: #f48771;
@@ -358,38 +383,62 @@
                 // Remove thinking message
                 removeThinking(thinkingId);
                 
-                // Parse response
-                const text = await response.text();
-                let result = null;
-                
+                // Stream response for real-time output
                 if (response.headers.get('content-type') === 'text/event-stream') {
-                    // Parse SSE response
-                    const lines = text.trim().split('\n');
-                    for (const line of lines) {
-                        if (line.startsWith('data: ')) {
-                            const data = JSON.parse(line.substring(6));
-                            if (data.result && data.result.content) {
-                                for (const item of data.result.content) {
-                                    if (item.type === 'text') {
-                                        result = item.text;
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+                    let responseId = 'response-' + Date.now();
+                    let responseText = '';
+                    
+                    // Create response element
+                    const terminal = document.getElementById('terminal');
+                    const entry = document.createElement('div');
+                    entry.className = 'entry';
+                    entry.id = responseId;
+                    entry.innerHTML = '<div class="response"></div>';
+                    terminal.appendChild(entry);
+                    const responseDiv = entry.querySelector('.response');
+                    
+                    while (true) {
+                        const {done, value} = await reader.read();
+                        if (done) break;
+                        
+                        buffer += decoder.decode(value, {stream: true});
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop(); // Keep incomplete line in buffer
+                        
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const data = JSON.parse(line.substring(6));
+                                    if (data.result && data.result.content) {
+                                        for (const item of data.result.content) {
+                                            if (item.type === 'text') {
+                                                responseText = item.text;
+                                                // Update response in real-time
+                                                responseDiv.innerHTML = formatResponse(responseText);
+                                                terminal.scrollTop = terminal.scrollHeight;
+                                            }
+                                        }
                                     }
+                                } catch (e) {
+                                    // Ignore parse errors for incomplete chunks
                                 }
-                            } else if (data.error) {
-                                throw new Error(data.error.message || 'Unknown error');
                             }
                         }
                     }
+                    
+                    if (!responseText) {
+                        responseDiv.textContent = 'No response from Claude Code';
+                    }
                 } else {
+                    // Non-streaming response
+                    const text = await response.text();
                     const data = JSON.parse(text);
                     if (data.result && data.result.content) {
-                        result = data.result.content[0].text;
+                        appendToTerminal('response', data.result.content[0].text);
                     }
-                }
-                
-                if (result) {
-                    appendToTerminal('response', result);
-                } else {
-                    appendToTerminal('response', 'No response from Claude Code');
                 }
                 
             } catch (error) {
@@ -441,20 +490,67 @@
             }
         }
 
-        // Format response with code blocks
+        // Format response with code blocks and tool usage
         function formatResponse(text) {
-            // Escape HTML first
-            text = escapeHtml(text);
+            // Parse tool usage markers
+            const lines = text.split('\n');
+            let formatted = [];
+            let i = 0;
             
-            // Format code blocks
-            text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-                return `<div class="code-block">${code}</div>`;
-            });
+            while (i < lines.length) {
+                const line = lines[i];
+                
+                // Check for tool usage marker
+                if (line.startsWith('🔧 Using tool:')) {
+                    const toolName = line.replace('🔧 Using tool:', '').trim();
+                    let toolInput = '';
+                    i++;
+                    
+                    // Collect tool input (indented JSON)
+                    while (i < lines.length && (lines[i].startsWith('{') || lines[i].startsWith('  ') || lines[i].trim() === '')) {
+                        if (lines[i].trim()) {
+                            toolInput += escapeHtml(lines[i]) + '\n';
+                        }
+                        i++;
+                    }
+                    
+                    formatted.push(`<div class="tool-use">
+                        <span class="tool-name">🔧 ${escapeHtml(toolName)}</span>
+                        <pre class="tool-input">${toolInput}</pre>
+                    </div>`);
+                    continue;
+                }
+                
+                // Check for tool result
+                if (line.startsWith('   →')) {
+                    formatted.push(`<div class="tool-result">${escapeHtml(line)}</div>`);
+                    i++;
+                    continue;
+                }
+                
+                // Check for final result marker
+                if (line.startsWith('✅')) {
+                    formatted.push(`<div style="color: #4ec9b0; margin-top: 10px;">${escapeHtml(line)}</div>`);
+                    i++;
+                    continue;
+                }
+                
+                // Regular text - escape and format
+                let escapedLine = escapeHtml(line);
+                
+                // Format code blocks
+                escapedLine = escapedLine.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+                    return `<div class="code-block">${code}</div>`;
+                });
+                
+                // Format inline code
+                escapedLine = escapedLine.replace(/`([^`]+)`/g, '<code style="background: #282828; padding: 2px 4px; border-radius: 3px;">$1</code>');
+                
+                formatted.push(escapedLine);
+                i++;
+            }
             
-            // Format inline code
-            text = text.replace(/`([^`]+)`/g, '<code style="background: #282828; padding: 2px 4px; border-radius: 3px;">$1</code>');
-            
-            return text;
+            return formatted.join('<br>');
         }
 
         // Escape HTML

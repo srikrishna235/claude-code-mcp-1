@@ -37,11 +37,11 @@ async def claude_execute(
         allowed_tools: Comma-separated list of allowed tools (e.g., "Read,Write,Edit,Bash")
     
     Returns:
-        Claude Code's response
+        Claude Code's response with full event stream
     """
     try:
-        # Build command
-        cmd = [CLAUDE_CLI_PATH, "-p", prompt]  # Use -p for print mode
+        # Build command with stream-json output for full visibility
+        cmd = [CLAUDE_CLI_PATH, "-p", prompt, "--output-format", "stream-json", "--verbose"]
         
         # Add allowed tools if specified
         if allowed_tools:
@@ -63,9 +63,80 @@ async def claude_execute(
             env={**os.environ}
         )
         
-        # Return output
+        # Process stream-json output
         if result.returncode == 0:
-            return result.stdout.strip()
+            import json
+            lines = result.stdout.strip().split('\n')
+            events = []
+            final_text = ""
+            
+            for line in lines:
+                if line:
+                    try:
+                        event = json.loads(line)
+                        event_type = event.get('type')
+                        
+                        if event_type == 'assistant':
+                            msg = event.get('message', {})
+                            content = msg.get('content', [])
+                            
+                            for item in content:
+                                if item.get('type') == 'text':
+                                    # Regular text response
+                                    text = item.get('text', '')
+                                    if text:
+                                        events.append({'type': 'text', 'content': text})
+                                        final_text = text  # Keep last text as final
+                                elif item.get('type') == 'tool_use':
+                                    # Tool usage
+                                    tool_name = item.get('name', 'Unknown')
+                                    tool_input = item.get('input', {})
+                                    events.append({
+                                        'type': 'tool_use',
+                                        'name': tool_name,
+                                        'input': tool_input
+                                    })
+                                    
+                        elif event_type == 'user':
+                            # Tool result
+                            msg = event.get('message', {})
+                            content = msg.get('content', [])
+                            for item in content:
+                                if item.get('type') == 'tool_result':
+                                    result_text = item.get('content', '')
+                                    events.append({
+                                        'type': 'tool_result', 
+                                        'content': result_text
+                                    })
+                                    
+                        elif event_type == 'result':
+                            # Final result
+                            final_text = event.get('result', final_text)
+                            
+                    except json.JSONDecodeError:
+                        continue
+            
+            # Format output for display
+            if events:
+                output_parts = []
+                for event in events:
+                    if event['type'] == 'text':
+                        output_parts.append(event['content'])
+                    elif event['type'] == 'tool_use':
+                        name = event['name']
+                        input_str = json.dumps(event['input'], indent=2) if isinstance(event['input'], dict) else str(event['input'])
+                        output_parts.append(f"\n🔧 Using tool: {name}\n{input_str}")
+                    elif event['type'] == 'tool_result':
+                        output_parts.append(f"   → {event['content'][:200]}...")
+                
+                # Add final result if different from events
+                if final_text and final_text not in output_parts:
+                    output_parts.append(f"\n✅ {final_text}")
+                    
+                return '\n'.join(output_parts)
+            else:
+                return final_text or "No response"
+                
         else:
             return f"Error (exit {result.returncode}): {result.stderr or 'Unknown error'}"
             
