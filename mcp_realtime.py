@@ -40,8 +40,9 @@ async def claude_execute(
         await context.info(f"🚀 Starting Claude Code CLI...")
         await context.report_progress(0, 100, "Initializing...")
         
-        # Build command with stream-json for structured output
-        cmd = [CLAUDE_CLI_PATH, "-p", prompt, "--output-format", "stream-json", "--verbose"]
+        # Build command WITHOUT stream-json (it doesn't actually stream)
+        # Remove -p for interactive mode that shows real progress
+        cmd = [CLAUDE_CLI_PATH, prompt]
         
         if allowed_tools:
             cmd.extend(["--allowedTools", allowed_tools])
@@ -63,7 +64,7 @@ async def claude_execute(
         current_step = 0
         output_buffer = []
         
-        # Read stdout line by line
+        # Read stdout line by line (interactive mode outputs here)
         while True:
             line = await process.stdout.readline()
             if not line:
@@ -72,12 +73,14 @@ async def claude_execute(
             line_text = line.decode('utf-8').strip()
             if not line_text:
                 continue
-                
-            try:
-                event = json.loads(line_text)
-                event_type = event.get('type')
-                
-                if event_type == 'assistant':
+            
+            # Send each line as progress (no JSON parsing needed)
+            await context.info(line_text)
+            output_buffer.append(line_text)
+        
+        # All the JSON parsing code below is now obsolete
+        # since we're not using stream-json format anymore
+        """
                     # Claude's response
                     msg = event.get('message', {})
                     content = msg.get('content', [])
@@ -149,11 +152,7 @@ async def claude_execute(
                     subtype = event.get('subtype')
                     if subtype == 'init':
                         await context.debug(f"System initialized with tools: {', '.join(event.get('tools', []))[:100]}")
-                        
-            except json.JSONDecodeError:
-                # Not JSON, might be error output
-                if line_text:
-                    await context.debug(f"Raw output: {line_text[:100]}")
+        """
                     
         # Wait for process to complete
         await process.wait()
