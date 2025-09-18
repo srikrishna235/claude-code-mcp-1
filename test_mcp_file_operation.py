@@ -32,6 +32,21 @@ async def test_file_operation():
         session_id = init_response.headers.get("mcp-session-id")
         print(f"Session ID: {session_id}\n")
         
+        # Send initialized notification
+        await client.post(
+            url,
+            headers={
+                "Content-Type": "application/json",
+                "Accept": "application/json, text/event-stream",
+                "Mcp-Session-Id": session_id
+            },
+            json={
+                "jsonrpc": "2.0",
+                "method": "notifications/initialized",
+                "params": {}
+            }
+        )
+        
         # Test 1: Analyze the test file
         print("Test 1: Asking Claude Code to analyze test_file.py")
         print("-" * 50)
