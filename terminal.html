@@ -245,7 +245,7 @@
 
     <script>
         // MCP Server configuration
-        const MCP_URL = 'http://127.0.0.1:8001/mcp';  // Using CORS proxy
+        const MCP_URL = 'http://127.0.0.1:8000/mcp';  // MCP server with CORS
         let sessionId = null;
         let isConnected = false;
         let workingDir = null;
@@ -372,9 +372,7 @@
                         params: {
                             name: 'claude_execute',
                             arguments: {
-                                prompt: command,
-                                working_dir: workingDir || process.cwd(),
-                                allowed_tools: allowedTools
+                                prompt: command
                             }
                         }
                     })
