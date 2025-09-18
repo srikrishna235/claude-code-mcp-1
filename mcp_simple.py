@@ -42,8 +42,8 @@ async def claude_execute(
         Claude Code's response with intermediate steps
     """
     try:
-        # Build command (without -p flag to show intermediate steps)
-        cmd = [CLAUDE_CLI_PATH, prompt]
+        # Build command with stream-json for intermediate steps
+        cmd = [CLAUDE_CLI_PATH, "-p", prompt, "--output-format", "stream-json", "--verbose"]
         
         # Add allowed tools if specified
         if allowed_tools:
@@ -65,9 +65,49 @@ async def claude_execute(
             env={**os.environ}
         )
         
-        # Return output
+        # Parse stream-json output and format it
         if result.returncode == 0:
-            return result.stdout.strip()
+            import json
+            output_lines = []
+            for line in result.stdout.strip().split('\n'):
+                if line:
+                    try:
+                        event = json.loads(line)
+                        event_type = event.get('type')
+                        
+                        if event_type == 'assistant':
+                            msg = event.get('message', {})
+                            content = msg.get('content', [])
+                            for item in content:
+                                if item.get('type') == 'text':
+                                    output_lines.append(item.get('text', ''))
+                                elif item.get('type') == 'tool_use':
+                                    tool_name = item.get('name')
+                                    tool_input = item.get('input', {})
+                                    output_lines.append(f"[Using tool: {tool_name}]")
+                                    if tool_name == 'Write':
+                                        output_lines.append(f"  Creating file: {tool_input.get('file_path', '')}")
+                                    elif tool_name == 'Read':
+                                        output_lines.append(f"  Reading file: {tool_input.get('file_path', '')}")
+                                    elif tool_name == 'Bash':
+                                        output_lines.append(f"  Running: {tool_input.get('command', '')}")
+                        elif event_type == 'user':
+                            # Tool results
+                            msg = event.get('message', {})
+                            content = msg.get('content', [])
+                            for item in content:
+                                if item.get('type') == 'tool_result':
+                                    result_text = item.get('content', '')
+                                    if result_text and len(result_text) < 200:
+                                        output_lines.append(f"  → {result_text}")
+                        elif event_type == 'result':
+                            # Final result
+                            final = event.get('result', '')
+                            if final:
+                                output_lines.append(f"\n{final}")
+                    except:
+                        pass  # Skip unparseable lines
+            return '\n'.join(output_lines)
         else:
             return f"Error (exit {result.returncode}): {result.stderr or 'Unknown error'}"
             
