@@ -1,0 +1,16 @@
+⚠️⚠️⚠️ IMPORTANT ⚠️⚠️⚠️
+
+DO NOT open the terminal.html file directly in your browser!
+
+WRONG ❌: file:///home/rishabh/Desktop/dev/claude-code-mcp/terminal.html
+RIGHT ✅: http://127.0.0.1:8080
+
+===============================================
+COPY AND PASTE THIS URL IN YOUR BROWSER:
+
+http://127.0.0.1:8080
+
+===============================================
+
+The servers are running. Just open the HTTP URL above!
+Not the file path, the HTTP URL!

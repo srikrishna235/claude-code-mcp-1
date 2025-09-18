@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+"""
+Claude Code CLI as MCP Server - With CORS Support
+Wraps actual Claude Code CLI using FastMCP
+"""
+
+import os
+import sys
+import subprocess
+import shutil
+from typing import Optional
+from mcp.server.fastmcp import FastMCP
+from starlette.applications import Starlette
+from starlette.middleware.cors import CORSMiddleware
+from starlette.routing import Route
+from starlette.responses import JSONResponse
+import uvicorn
+import asyncio
+
+# Check if Claude Code CLI is installed
+CLAUDE_CLI_PATH = shutil.which("claude")
+if not CLAUDE_CLI_PATH:
+    print("Error: Claude Code CLI not installed. Install with: npm install -g @anthropic-ai/claude-code", file=sys.stderr)
+    sys.exit(1)
+
+# Initialize MCP server
+mcp = FastMCP("claude-code")
+
+# Phase 1: Single tool that wraps Claude Code CLI
+@mcp.tool()
+async def claude_execute(
+    prompt: str,
+    working_dir: Optional[str] = None,
+    allowed_tools: Optional[str] = None
+) -> str:
+    """
+    Execute a task using Claude Code CLI's AI capabilities.
+    
+    Args:
+        prompt: Natural language description of the task
+        working_dir: Working directory for execution (optional)
+        allowed_tools: Comma-separated list of allowed tools (e.g., "Read,Write,Edit,Bash")
+    
+    Returns:
+        Claude Code's response
+    """
+    try:
+        # Build command
+        cmd = [CLAUDE_CLI_PATH, "-p", prompt]  # Use -p for print mode
+        
+        # Add allowed tools if specified
+        if allowed_tools:
+            cmd.extend(["--allowedTools", allowed_tools])
+        
+        # Skip permissions for programmatic usage
+        cmd.append("--dangerously-skip-permissions")
+        
+        # Set working directory
+        cwd = os.path.expanduser(working_dir) if working_dir else os.getcwd()
+        
+        # Execute Claude Code CLI
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            cwd=cwd,
+            timeout=300,  # 5 minutes
+            env={**os.environ}
+        )
+        
+        # Return output
+        if result.returncode == 0:
+            return result.stdout.strip()
+        else:
+            return f"Error (exit {result.returncode}): {result.stderr or 'Unknown error'}"
+            
+    except subprocess.TimeoutExpired:
+        return "Task timed out after 5 minutes"
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+# Create app with CORS support
+def create_app():
+    """Create Starlette app with CORS and MCP mounted"""
+    # Get the streamable HTTP app from FastMCP
+    # This needs to be run in an async context with proper lifecycle
+    app = Starlette()
+    
+    # Add CORS middleware
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],  # Allow all origins for dev
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["Mcp-Session-Id", "mcp-session-id"]
+    )
+    
+    return app
+
+# Run server with proper lifecycle management
+async def run_server(host="127.0.0.1", port=8000):
+    """Run the server with CORS support"""
+    # Create the app
+    app = create_app()
+    
+    # Get the MCP ASGI app and mount it
+    mcp_app = mcp.streamable_http_app()
+    app.mount("/mcp", mcp_app)
+    
+    # Add lifespan management for session manager
+    async def run_with_lifecycle():
+        async with mcp.session_manager.run():
+            config = uvicorn.Config(app, host=host, port=port, log_level="info")
+            server = uvicorn.Server(config)
+            await server.serve()
+    
+    await run_with_lifecycle()
+
+if __name__ == "__main__":
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="Claude Code CLI as MCP Server with CORS")
+    parser.add_argument("--host", default="127.0.0.1", help="Host to bind to")
+    parser.add_argument("--port", type=int, default=8000, help="Port to bind to")
+    
+    args = parser.parse_args()
+    
+    print(f"Claude Code MCP Server (CORS Enabled)", file=sys.stderr)
+    print(f"======================================", file=sys.stderr)
+    print(f"Claude CLI: {CLAUDE_CLI_PATH}", file=sys.stderr)
+    print(f"Endpoint: http://{args.host}:{args.port}/mcp", file=sys.stderr)
+    print(f"", file=sys.stderr)
+    print(f"CORS enabled for browser access", file=sys.stderr)
+    print(f"Terminal UI: http://127.0.0.1:8080", file=sys.stderr)
+    
+    # Run the server
+    asyncio.run(run_server(args.host, args.port))
