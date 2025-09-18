@@ -40,16 +40,15 @@ async def claude_execute(
         await context.info(f"🚀 Starting Claude Code CLI...")
         await context.report_progress(0, 100, "Initializing...")
         
-        # Build command WITHOUT stream-json (it doesn't actually stream)
-        # Remove -p for interactive mode that shows real progress
+        # Build command WITHOUT -p to see natural progress
+        # Progress appears on stderr, not stdout
         cmd = [CLAUDE_CLI_PATH, prompt]
         
-        if allowed_tools:
-            cmd.extend(["--allowedTools", allowed_tools])
-        
+        # Always skip permissions for programmatic use
         cmd.append("--dangerously-skip-permissions")
         
-        cwd = os.path.expanduser(working_dir) if working_dir else os.getcwd()
+        # Use current directory
+        cwd = os.getcwd()
         
         # Create subprocess for streaming output
         process = await asyncio.create_subprocess_exec(
@@ -59,24 +58,32 @@ async def claude_execute(
             cwd=cwd
         )
         
-        # Track progress
-        total_steps = 10  # Estimate
-        current_step = 0
+        # Track output
         output_buffer = []
         
-        # Read stdout line by line (interactive mode outputs here)
-        while True:
-            line = await process.stdout.readline()
-            if not line:
-                break
-                
-            line_text = line.decode('utf-8').strip()
-            if not line_text:
-                continue
-            
-            # Send each line as progress (no JSON parsing needed)
-            await context.info(line_text)
-            output_buffer.append(line_text)
+        # Create tasks to read both stdout and stderr concurrently
+        async def read_stdout():
+            while True:
+                line = await process.stdout.readline()
+                if not line:
+                    break
+                line_text = line.decode('utf-8').strip()
+                if line_text:
+                    await context.info(f"📝 {line_text}")
+                    output_buffer.append(line_text)
+        
+        async def read_stderr():
+            while True:
+                line = await process.stderr.readline()
+                if not line:
+                    break
+                line_text = line.decode('utf-8').strip()
+                if line_text:
+                    # stderr contains progress messages
+                    await context.info(f"⚡ {line_text}")
+        
+        # Run both readers concurrently
+        await asyncio.gather(read_stdout(), read_stderr())
         
         # All the JSON parsing code below is now obsolete
         # since we're not using stream-json format anymore
