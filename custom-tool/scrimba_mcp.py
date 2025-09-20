@@ -85,23 +85,28 @@ async def show_lesson(
     
     step_data = lesson["steps"][step - 1]
     
-    result = f"""📚 **{lesson['title']}** - Step {step}/{max_steps}
+    result = f"""Hey buddy! This is going to be SO much fun! 🎉
+
+📚 **{lesson['title']}** - Step {step}/{max_steps}
 {'='*40}
 
-**Concept:**
+**Let me show you something cool:**
 {step_data['explanation']}
 
-**Code:**
+**Type this out - don't copy paste!**
 ```python
 {step_data['code']}
 ```
 
-**Result:**
+**When you run it, you'll see:**
 ```
 {step_data['output']}
 ```
 
-💡 Type 'next' to continue or 'previous' to go back."""
+🎯 **YOUR TURN!** Go ahead and try this RIGHT NOW!
+Pause here and code it yourself!
+
+When done, type 'next' for more excitement!"""
     
     return result
 
@@ -114,14 +119,28 @@ async def next() -> str:
         Next lesson step or completion message
     """
     if not CURRENT_LESSON["topic"]:
-        return "❌ No active lesson. Use show_lesson() to start."
+        return """Hey buddy! Looks like we haven't started a lesson yet! 
+        
+Let's fix that RIGHT NOW! Try:
+- "teach me variables" to learn about storing data
+- "teach me loops" to learn about repeating code
+
+The journey of a thousand apps starts with a single lesson! 🚀"""
     
     topic = CURRENT_LESSON["topic"]
     current_step = CURRENT_LESSON["step"]
     total_steps = CURRENT_LESSON["total_steps"]
     
     if current_step >= total_steps:
-        return f"✅ You've completed '{topic}'! Start another lesson with show_lesson()."
+        return f"""🎉 **BOOM! You CRUSHED the '{topic}' lesson!** 
+
+You just went from zero to DANGEROUS with this concept! 
+This is HUGE - you're officially thinking like a programmer now!
+
+Ready to solidify those skills? Let's put them to work!
+Type 'give_challenge' and let's see what you can build! 
+
+Remember: The only way to learn to code is to write a lot of code! 💪"""
     
     return await show_lesson(topic, current_step + 1)
 
@@ -134,13 +153,24 @@ async def previous() -> str:
         Previous lesson step
     """
     if not CURRENT_LESSON["topic"]:
-        return "❌ No active lesson. Use show_lesson() to start."
+        return """Hey buddy! No lesson is running right now!
+
+Want to start learning? Try:
+- "teach me variables" - the foundation of everything!
+- "teach me loops" - make your code work smarter!
+
+Let's get this party started! 🎉"""
     
     topic = CURRENT_LESSON["topic"]
     current_step = CURRENT_LESSON["step"]
     
     if current_step <= 1:
-        return "❌ Already at the first step."
+        return """Whoa there! You're already at the beginning! 🏁
+
+This is step 1 - the starting line!
+Review it as many times as you want - repetition is KEY!
+
+When ready, type 'next' to continue forward!"""
     
     return await show_lesson(topic, current_step - 1)
 
@@ -195,18 +225,20 @@ async def give_challenge(
     import random
     challenge = random.choice(level_challenges)
     
-    return f"""🎯 **CHALLENGE TIME!** ({difficulty.upper()})
+    return f"""Hey buddy! Time to write some code! This is where it gets FUN! 🚀
+
+🎯 **CHALLENGE TIME!** ({difficulty.upper()})
 
 **Your mission ({challenge['time']}):**
 {challenge['task']}
 
 **Go ahead and do this RIGHT NOW!**
-Pause and try it yourself first.
+Don't overthink it - just start typing!
 
-When done, I'll check your solution!
-Need help? Ask for a hint!
+The first time feels weird, but it becomes second nature!
 
-Remember: The first time feels weird, but it becomes second nature! 💪"""
+When you're done (or stuck), show me your code!
+Remember: Making mistakes is how we learn! That's totally okay!"""
 
 @mcp.tool()
 async def check_code(
@@ -248,21 +280,22 @@ async def check_code(
     if "functoin" in code:
         warnings.append("💡 Tiny typo: 'functoin' should be 'function' - happens to everyone!")
     
-    # Build response
-    response = "🎉 **GREAT JOB!** You just wrote real code!\n\n"
-    
-    if feedback:
-        response += "What you did well:\n"
-        response += "\n".join(feedback) + "\n\n"
-    
+    # Build response with Per Borgen energy
     if warnings:
-        response += "Quick fixes:\n"
+        response = "Oops! Super common mistake! I made this EXACT error when I started! 😄\n\n"
         response += "\n".join(warnings) + "\n\n"
-        response += "But that's totally okay - making mistakes is how we learn!\n\n"
-    
-    response += "**You're officially programming!** 🚀\n"
-    response += "Your JavaScript journey is really taking off!\n\n"
-    response += "Ready for another challenge? Just ask!"
+        response += "JavaScript is telling us what's wrong - that's actually helpful!\n"
+        response += "Try again with those fixes - you've got this!\n\n"
+    else:
+        response = "🎉 **GREAT JOB!** You just wrote REAL CODE! This is HUGE!\n\n"
+        
+        if feedback:
+            response += "Look what you did:\n"
+            response += "\n".join(feedback) + "\n\n"
+        
+        response += "Your skills are becoming DANGEROUS! 🔥\n\n"
+        response += "The only way to learn to code is to write a lot of code - and you're doing it!\n\n"
+        response += "Want another challenge? I've got TONS! Just say the word!"
     
     return response
 
@@ -280,22 +313,55 @@ async def celebrate(
         Enthusiastic celebration message
     """
     celebrations = {
-        "first_variable": "🎉 HUGE moment! You just created your FIRST variable! You're no longer like everyone else - you're a PROGRAMMER!",
-        "first_function": "🚀 This is MASSIVE! You just wrote a function! You can now create reusable code blocks!",
-        "completed_lesson": "💪 You CRUSHED it! Give yourself a pat on the back - that's a HUGE accomplishment!",
-        "fixed_bug": "🔧 YES! You just debugged code! That's what real developers do every day!",
-        "progress": "🌟 You're doing AMAZING! Your skills are becoming dangerous!",
-        "project": "🏆 INCREDIBLE! You built something REAL! This solves actual problems!"
+        "first_variable": """🎉 **THIS IS HUGE!** You just created your FIRST variable!
+        
+You're officially NOT like everyone else - you're a PROGRAMMER now!
+Most people NEVER get this far! But YOU did!
+
+I still remember my first variable - it felt like MAGIC! ✨""",
+        
+        "first_function": """🚀 **MIND = BLOWN!** You just wrote a FUNCTION!
+        
+This is MASSIVE! You can now create reusable code blocks!
+Functions are the building blocks of EVERY app you've ever used!
+
+You're thinking like a developer now! SO exciting!""",
+        
+        "completed_lesson": """💪 **BOOM! LESSON CRUSHED!**
+        
+Give yourself a MASSIVE pat on the back!
+You just learned something 99% of people never will!
+
+Your brain is literally rewiring itself right now! 🧠""",
+        
+        "fixed_bug": """🔧 **YES YES YES!** You just DEBUGGED code!
+        
+This is what REAL developers do ALL DAY!
+You didn't give up - you SOLVED it!
+
+Bugs are not failures - they're TEACHERS! And you're learning FAST!""",
+        
+        "progress": """🌟 **Your skills are becoming DANGEROUS!**
+        
+You're making progress that would make professional developers proud!
+Keep this momentum going!""",
+        
+        "project": """🏆 **OH MY GOODNESS!** You built something REAL!
+        
+This isn't just practice - this SOLVES actual problems!
+You could show this to people and they'd be IMPRESSED!
+
+You're not just learning - you're CREATING! That's the difference!"""
     }
     
     message = celebrations.get(achievement, celebrations["progress"])
     
     return f"""{message}
 
-Remember: The only way to learn how to code is to write a lot of code!
-And you're doing EXACTLY that!
+Remember: The only way to learn to code is to write a LOT of code!
+And buddy... you're doing EXACTLY that! 
 
-Keep going, buddy! 💪"""
+This is SO exciting! Let's keep the momentum going! 🚀💪"""
 
 # Progress tracking
 USER_PROGRESS = {
@@ -320,39 +386,47 @@ async def show_hint(
     if not CURRENT_LESSON["topic"]:
         # Give generic hints for challenges
         hints = {
-            1: "💡 Remember: Variables start with 'let' or 'const'...",
-            2: "💡 Try: let variableName = value",
-            3: "💡 Almost there! Example: let count = 0"
+            1: "💡 **Tiny nudge:** Variables are containers... think about HOW we create them in JavaScript!",
+            2: "💡 **Getting warmer!** Remember: 'let' is your friend! Pattern: let [something] = [value]",
+            3: "💡 **SO CLOSE!** Try this exact pattern: let count = 0 (but with your own variable name!)"
         }
     else:
         # Context-aware hints based on current lesson
         topic = CURRENT_LESSON["topic"]
         if topic == "variables":
             hints = {
-                1: "💡 Variables are like labeled boxes...",
-                2: "💡 Use 'let' to create a new variable",
-                3: "💡 Pattern: let name = 'value'"
+                1: "💡 **Think about it:** Variables are like labeled boxes that hold stuff. How do we CREATE a box?",
+                2: "💡 **Here's the secret:** Use 'let' to create a new variable box! let [name] = [stuff]",
+                3: "💡 **You're RIGHT THERE!** Pattern: let name = 'Per' or let age = 25"
             }
         elif topic == "loops":
             hints = {
-                1: "💡 Loops repeat code multiple times...",
-                2: "💡 'for' loops: for(let i = 0; i < max; i++)",
-                3: "💡 Try: for(let i = 0; i < 3; i++) { console.log(i) }"
+                1: "💡 **Loops are POWERFUL!** They let you repeat code without typing it 100 times!",
+                2: "💡 **The magic formula:** for(let i = 0; i < max; i++) - this runs 'max' times!",
+                3: "💡 **Copy this and modify:** for(let i = 0; i < 3; i++) { console.log('Hello!') }"
             }
         else:
             hints = {
-                1: "💡 Think about what you're trying to store or do...",
-                2: "💡 Break it down into smaller steps",
-                3: "💡 Start with the simplest version"
+                1: "💡 **Step back for a second:** What are you trying to accomplish? Break it into baby steps!",
+                2: "💡 **Make it SIMPLER:** Start with the most basic version, then add complexity",
+                3: "💡 **Just START typing:** Even if it's wrong, we can fix it! That's how we learn!"
             }
     
     hint = hints.get(level, hints[1])
     
-    return f"""{hint}
+    prefix = [
+        "Hey buddy! Stuck? That's TOTALLY normal! Let me help... 🤔",
+        "Alright, let me give you a BIGGER hint! This is exciting! 🎯",
+        "OK buddy, I'm basically giving you the answer here! You've GOT this! 🚀"
+    ]
+    
+    return f"""{prefix[level-1] if level <= 3 else "Hey buddy! Let me help!"}
 
-{"Need more help? Ask for level 2 or 3 hint!" if level < 3 else "Give it your best shot! You've got this!"}
+{hint}
 
-Remember: It's totally okay to need hints - everyone does at first!"""
+{"Want more help? Type 'show_hint' with level 2 or 3!" if level < 3 else "Now GO! Type it out! Making mistakes is how we learn!"}
+
+Remember: I got stuck here too when I started. EVERYONE does! That's the journey! 💪"""
 
 @mcp.tool()
 async def track_progress() -> str:
@@ -367,38 +441,65 @@ async def track_progress() -> str:
         USER_PROGRESS["concepts_learned"].append(CURRENT_LESSON["topic"])
     
     # Build progress report
-    report = "📊 **YOUR CODING JOURNEY**\n"
-    report += "=" * 40 + "\n\n"
+    report = """Hey buddy! Let's see how DANGEROUS you've become! 🔥
+
+📊 **YOUR EPIC CODING JOURNEY**
+""" + "=" * 40 + """
+
+**🎯 Concepts You've CONQUERED:**
+"""
     
-    # Concepts learned
-    report += "**Concepts Mastered:**\n"
     concepts = {
-        "variables": "✓ Variables - Store data",
-        "loops": "✓ Loops - Repeat code",
-        "functions": "✓ Functions - Reusable code",
-        "arrays": "✓ Arrays - Lists of items",
-        "objects": "✓ Objects - Complex data"
+        "variables": "✅ Variables - You can store ANY data now!",
+        "loops": "✅ Loops - You make computers do the repetitive work!",
+        "functions": "✅ Functions - You write code ONCE, use it EVERYWHERE!",
+        "arrays": "✅ Arrays - You handle lists like a PRO!",
+        "objects": "✅ Objects - You structure complex data!"
     }
     
-    for concept in USER_PROGRESS["concepts_learned"]:
-        if concept in concepts:
-            report += f"{concepts[concept]}\n"
-    
-    if not USER_PROGRESS["concepts_learned"]:
-        report += "Start your first lesson to begin!\n"
-    
-    report += f"\n**Challenges Completed:** {USER_PROGRESS['challenges_completed']}\n"
-    report += f"**Current Level:** {USER_PROGRESS['current_level'].title()}\n\n"
-    
-    # Motivational message
-    if USER_PROGRESS["challenges_completed"] > 5:
-        report += "🔥 You're on FIRE! Your skills are becoming dangerous!\n"
-    elif USER_PROGRESS["challenges_completed"] > 2:
-        report += "💪 You're making great progress! Keep coding!\n"
+    if USER_PROGRESS["concepts_learned"]:
+        for concept in USER_PROGRESS["concepts_learned"]:
+            if concept in concepts:
+                report += f"{concepts[concept]}\n"
+        report += "\n**THIS IS HUGE!** Each concept makes you exponentially more powerful!\n"
     else:
-        report += "🚀 Your journey has just begun. Exciting times ahead!\n"
+        report += "Ready to start? Your first lesson will BLOW YOUR MIND! 🚀\n"
     
-    report += "\nRemember: The only way to learn to code is to write a lot of code!"
+    report += f"\n**⚡ Challenges CRUSHED:** {USER_PROGRESS['challenges_completed']}"
+    
+    if USER_PROGRESS["challenges_completed"] > 0:
+        report += f" (That's {USER_PROGRESS['challenges_completed']} real problems SOLVED!)\n"
+    else:
+        report += " (Your first challenge awaits!)\n"
+    
+    report += f"**🏆 Current Level:** {USER_PROGRESS['current_level'].upper()}\n\n"
+    
+    # Motivational message based on progress
+    if USER_PROGRESS["challenges_completed"] >= 10:
+        report += """🔥🔥🔥 **UNSTOPPABLE!** 🔥🔥🔥
+You've written more code than 99% of people EVER will!
+Your skills are becoming SERIOUSLY dangerous!
+
+At this rate, you'll be building REAL apps in no time!"""
+    elif USER_PROGRESS["challenges_completed"] > 5:
+        report += """🔥 **You're on FIRE!**
+Look at you go! This momentum is EVERYTHING!
+Professional developers started EXACTLY where you are now!"""
+    elif USER_PROGRESS["challenges_completed"] > 2:
+        report += """💪 **You're gaining SERIOUS momentum!**
+Those first challenges were the HARDEST - and you crushed them!
+It only gets more fun from here!"""
+    elif USER_PROGRESS["challenges_completed"] > 0:
+        report += """🌟 **You've STARTED! That's the hardest part!**
+Most people never write their first line of code - but YOU DID!
+Keep going - this is where it gets exciting!"""
+    else:
+        report += """🚀 **Your journey is about to begin!**
+The first step is the most important one!
+Let's write some code and change your life!"""
+    
+    report += """\n\nRemember: The only way to learn to code is to write a LOT of code!
+And buddy... you're doing EXACTLY that! Let's keep going! 💪"""
     
     return report
 
@@ -417,63 +518,93 @@ async def start_project(
     """
     projects = {
         "passenger_counter": {
-            "story": "When I was 19, I had to count people entering the subway. SO boring!",
-            "goal": "Build an app to count passengers",
+            "story": "When I was 19, I had to count people entering the subway. SO boring! My finger hurt from clicking the mechanical counter!",
+            "goal": "Build an app to count passengers (and save fingers!)",
+            "why": "This was my ACTUAL problem! And coding solved it!",
             "steps": [
-                "1. Create variable: let count = 0",
-                "2. Create function: increment()",  
-                "3. Add button in HTML",
-                "4. Connect button to function",
-                "5. Display count on page"
+                "1. Create variable: let count = 0 (your counter starts at zero)",
+                "2. Create function: increment() to add 1 each time",  
+                "3. Add button in HTML (what users will click)",
+                "4. Connect button to function (make it WORK!)",
+                "5. Display count on page (show the number!)"
             ],
-            "starter": """let count = 0
+            "starter": """let count = 0  // This is your counter!
 
 function increment() {
-    // Add 1 to count
-    // Update the display
+    // TODO: Add 1 to count
+    // TODO: Update what's shown on screen
 }
 
-// Your turn! Fill in the function"""
+// Your turn! Make this function actually COUNT!"""
         },
         "blackjack": {
-            "story": "I won 100 euros playing Blackjack in Prague!",
-            "goal": "Build a Blackjack game",
+            "story": "I won 100 euros playing Blackjack in Prague! Then lost it all... but I learned probability!",
+            "goal": "Build a REAL Blackjack game",
+            "why": "Games teach logic, conditions, and state management!",
             "steps": [
-                "1. Create variables for cards",
-                "2. Calculate sum function",
-                "3. Check for Blackjack",
-                "4. Draw new card function",
-                "5. Determine winner"
+                "1. Create variables for your cards",
+                "2. Make a sum calculation function",
+                "3. Check if you hit Blackjack (21!)",
+                "4. Create 'draw new card' function",
+                "5. Determine who wins!"
             ],
-            "starter": """let firstCard = 11
-let secondCard = 10
-let sum = firstCard + secondCard
+            "starter": """let firstCard = 11   // Ace or Jack/Queen/King!
+let secondCard = 10  // Face card!
+let sum = firstCard + secondCard  // What's your total?
 
-// Create a function to check if you have Blackjack!"""
+// TODO: Create a function to check if you have Blackjack!
+// Hint: Blackjack means sum equals... what?"""
+        },
+        "chrome_extension": {
+            "story": "I got tired of manually checking things on websites. So I automated it!",
+            "goal": "Build a Chrome Extension that actually WORKS",
+            "why": "Extensions can save you HOURS of repetitive work!",
+            "steps": [
+                "1. Create manifest.json (extension config)",
+                "2. Build popup HTML interface",
+                "3. Add JavaScript functionality",
+                "4. Connect to Chrome APIs",
+                "5. Test in real browser!"
+            ],
+            "starter": """// manifest.json tells Chrome about your extension
+{
+    "name": "My First Extension",
+    "version": "1.0",
+    "manifest_version": 3
+    // TODO: Add more configuration
+}"""
         }
     }
     
     project = projects.get(project_name, projects["passenger_counter"])
     
-    return f"""🎯 **PROJECT TIME: {project_name.upper().replace('_', ' ')}**
+    return f"""Hey buddy! This is SO EXCITING! We're building something REAL! 🚀
 
-**Story:** {project['story']}
-Let's solve this with code!
+🎯 **PROJECT: {project_name.upper().replace('_', ' ')}**
 
-**Goal:** {project['goal']}
+**MY STORY:** {project['story']}
 
-**Steps:**
+**WHY THIS MATTERS:** {project['why']}
+
+**WHAT WE'RE BUILDING:** {project['goal']}
+
+**🔨 BUILD STEPS (We'll do these together!):**
 {chr(10).join(project['steps'])}
 
-**Starter Code:**
+**📝 STARTER CODE (Type this out - don't copy!):**
 ```javascript
 {project['starter']}
 ```
 
-🚀 **YOUR MISSION:** Complete step 1 right now!
-This is a REAL project that solves an actual problem!
+⚡ **YOUR MISSION RIGHT NOW:**
+Complete Step 1! Just START! Don't overthink it!
 
-Go ahead and code! When stuck, ask for hints!"""
+**Pro tip:** The first line of code is the hardest. After that, momentum takes over!
+
+Type your code and show me! If you get stuck, ask for a hint!
+
+**This is not just practice - this solves REAL problems!**
+Let's GO buddy! Your first real project starts NOW! 🔥"""
 
 if __name__ == "__main__":
     import sys
