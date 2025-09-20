@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 """
-Weather MCP Server - Custom tool for temperature fetching
-Provides weather information to Claude Code
+Multi-Tool MCP Server - Weather, Teaching, and Image Generation
+Provides various tools to Claude Code
 """
 
 import asyncio
 import httpx
-from typing import Optional
+import json
+from typing import Optional, Dict
 from mcp.server.fastmcp import FastMCP
 from starlette.applications import Starlette
 from starlette.middleware.cors import CORSMiddleware
 import uvicorn
 
 # Initialize MCP server
-mcp = FastMCP("weather-tools")
+mcp = FastMCP("multi-tools")
 
 @mcp.tool()
 async def get_temperature(
@@ -184,6 +185,94 @@ async def compare_weather(
     except Exception as e:
         return f"Error comparing weather: {str(e)}"
 
+@mcp.tool()
+async def generate_image(
+    prompt: str
+) -> str:
+    """
+    Generate an image from a text prompt using FAL AI.
+    
+    Args:
+        prompt: Text description of the image to generate
+    
+    Returns:
+        Prompt and URL of the generated image
+    """
+    try:
+        import os
+        import fal_client
+        
+        # Set API key
+        os.environ["FAL_KEY"] = "3845a313-cfc9-469b-ac5d-fe354d7106dd:42f4fb3cddc5156df1b724115431bb85"
+        
+        # Run in async executor since fal_client.subscribe is sync
+        import concurrent.futures
+        
+        def generate():
+            result = fal_client.subscribe(
+                "fal-ai/qwen-image",
+                arguments={"prompt": prompt},
+                with_logs=False
+            )
+            return result
+        
+        # Run in thread executor
+        loop = asyncio.get_event_loop()
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            result = await loop.run_in_executor(executor, generate)
+        
+        if result and "images" in result:
+            url = result["images"][0]["url"]
+            return f"Prompt: {prompt}\nURL: {url}"
+        return "Error: No image generated"
+            
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+@mcp.tool()
+async def text_to_speech(
+    text: str
+) -> str:
+    """
+    Generate speech audio from text.
+    
+    Args:
+        text: Text to convert to speech
+    
+    Returns:
+        Text and URL of the generated audio
+    """
+    try:
+        import os
+        import fal_client
+        
+        # Set API key
+        os.environ["FAL_KEY"] = "3845a313-cfc9-469b-ac5d-fe354d7106dd:42f4fb3cddc5156df1b724115431bb85"
+        
+        # Run in async executor since fal_client.subscribe is sync
+        import concurrent.futures
+        
+        def generate():
+            result = fal_client.subscribe(
+                "fal-ai/chatterbox/text-to-speech",
+                arguments={"text": text},
+                with_logs=False
+            )
+            return result
+        
+        # Run in thread executor
+        loop = asyncio.get_event_loop()
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            result = await loop.run_in_executor(executor, generate)
+        
+        if result and "audio" in result:
+            url = result["audio"]["url"]
+            return f"Text: {text}\nAudio URL: {url}"
+        return "Error: No audio generated"
+            
+    except Exception as e:
+        return f"Error: {str(e)}"
+
 # Create app with CORS support
 def create_app():
     """Create Starlette app with CORS and MCP mounted"""
@@ -222,14 +311,16 @@ if __name__ == "__main__":
     # Check if running in stdio mode (default for Claude MCP)
     if "--http" in sys.argv:
         # HTTP mode for direct testing
-        print("Weather MCP Server (HTTP Mode)")
-        print("==============================")
+        print("Multi-Tool MCP Server (HTTP Mode)")
+        print("==================================")
         print("Starting server on http://localhost:8003")
         print("")
         print("Available tools:")
         print("  - get_temperature: Get current temperature for a city")
         print("  - get_weather_forecast: Get multi-day forecast")
         print("  - compare_weather: Compare weather between cities")
+        print("  - generate_image: Generate AI images from text prompts")
+        print("  - text_to_speech: Convert text to speech audio")
         print("")
         
         # Run HTTP server

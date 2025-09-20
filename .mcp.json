@@ -1,12 +1,8 @@
 {
   "mcpServers": {
-    "weather-tools": {
+    "multi-tools": {
       "command": "python",
       "args": ["weather_mcp.py"]
-    },
-    "teaching-tools": {
-      "command": "python",
-      "args": ["custom-tool/teaching_mcp.py"]
     }
   }
 }
