@@ -14,8 +14,10 @@ from starlette.applications import Starlette
 from starlette.middleware.cors import CORSMiddleware
 from starlette.routing import Route
 from starlette.responses import JSONResponse
+from starlette.requests import Request
 import uvicorn
 import asyncio
+import json
 
 # Check if Claude Code CLI is installed
 CLAUDE_CLI_PATH = shutil.which("claude")
@@ -98,24 +100,102 @@ def create_app():
     
     return app
 
+# Simple MCP handler
+async def handle_mcp_request(request: Request):
+    """Handle MCP JSON-RPC requests"""
+    try:
+        data = await request.json()
+        method = data.get("method")
+        
+        # Handle initialize
+        if method == "initialize":
+            response = {
+                "jsonrpc": "2.0",
+                "id": data.get("id"),
+                "result": {
+                    "protocolVersion": "2024-11-05",
+                    "serverInfo": {
+                        "name": "claude-code",
+                        "version": "1.0.0"
+                    },
+                    "capabilities": {
+                        "tools": {
+                            "claude_execute": {
+                                "description": "Execute tasks with Claude Code CLI"
+                            }
+                        }
+                    }
+                }
+            }
+            return JSONResponse(response)
+        
+        # Handle initialized notification
+        elif method == "initialized":
+            return JSONResponse({"jsonrpc": "2.0", "result": None})
+        
+        # Handle tool calls
+        elif method == "tools/call":
+            params = data.get("params", {})
+            tool_name = params.get("name")
+            
+            if tool_name == "claude_execute":
+                args = params.get("arguments", {})
+                result = await claude_execute(
+                    prompt=args.get("prompt", ""),
+                    working_dir=args.get("working_dir"),
+                    allowed_tools=args.get("allowed_tools")
+                )
+                
+                return JSONResponse({
+                    "jsonrpc": "2.0",
+                    "id": data.get("id"),
+                    "result": {
+                        "content": [{
+                            "type": "text",
+                            "text": result
+                        }]
+                    }
+                })
+        
+        # Handle tools/list
+        elif method == "tools/list":
+            return JSONResponse({
+                "jsonrpc": "2.0",
+                "id": data.get("id"),
+                "result": {
+                    "tools": [{
+                        "name": "claude_execute",
+                        "description": "Execute a task using Claude Code CLI's AI capabilities",
+                        "inputSchema": {
+                            "type": "object",
+                            "properties": {
+                                "prompt": {"type": "string"},
+                                "working_dir": {"type": "string"},
+                                "allowed_tools": {"type": "string"}
+                            },
+                            "required": ["prompt"]
+                        }
+                    }]
+                }
+            })
+        
+        return JSONResponse({"jsonrpc": "2.0", "error": {"code": -32601, "message": "Method not found"}}, status_code=404)
+        
+    except Exception as e:
+        return JSONResponse({"jsonrpc": "2.0", "error": {"code": -32603, "message": str(e)}}, status_code=500)
+
 # Run server with proper lifecycle management
 async def run_server(host="127.0.0.1", port=8000):
     """Run the server with CORS support"""
     # Create the app
     app = create_app()
     
-    # Get the MCP ASGI app and mount it
-    mcp_app = mcp.streamable_http_app()
-    app.mount("/mcp", mcp_app)
+    # Add MCP endpoint
+    app.add_route("/", handle_mcp_request, methods=["POST"])
     
-    # Add lifespan management for session manager
-    async def run_with_lifecycle():
-        async with mcp.session_manager.run():
-            config = uvicorn.Config(app, host=host, port=port, log_level="info")
-            server = uvicorn.Server(config)
-            await server.serve()
-    
-    await run_with_lifecycle()
+    config = uvicorn.Config(app, host=host, port=port, log_level="info")
+    server = uvicorn.Server(config)
+    await server.serve()
 
 if __name__ == "__main__":
     import argparse
@@ -129,7 +209,7 @@ if __name__ == "__main__":
     print(f"Claude Code MCP Server (CORS Enabled)", file=sys.stderr)
     print(f"======================================", file=sys.stderr)
     print(f"Claude CLI: {CLAUDE_CLI_PATH}", file=sys.stderr)
-    print(f"Endpoint: http://{args.host}:{args.port}/mcp", file=sys.stderr)
+    print(f"Endpoint: http://{args.host}:{args.port}", file=sys.stderr)
     print(f"", file=sys.stderr)
     print(f"CORS enabled for browser access", file=sys.stderr)
     print(f"Terminal UI: http://127.0.0.1:8080", file=sys.stderr)

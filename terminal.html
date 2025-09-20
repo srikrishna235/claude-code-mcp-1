@@ -245,7 +245,7 @@
 
     <script>
         // MCP Server configuration
-        const MCP_URL = 'http://127.0.0.1:8001/mcp';  // Using CORS proxy
+        const MCP_URL = 'http://127.0.0.1:8001';  // MCP endpoint with CORS
         let sessionId = null;
         let isConnected = false;
         let workingDir = null;
@@ -261,12 +261,11 @@
             try {
                 updateStatus('Connecting...', false);
                 
-                // Initialize session
+                // Initialize connection
                 const response = await fetch(MCP_URL, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json, text/event-stream'
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         jsonrpc: '2.0',
@@ -283,24 +282,19 @@
                     })
                 });
 
-                // Get session ID from headers
-                sessionId = response.headers.get('mcp-session-id');
-                console.log('Response headers:', [...response.headers.entries()]);
-                console.log('Session ID:', sessionId);
-                
-                if (sessionId) {
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Initialize response:', data);
+                    
                     // Send initialized notification
                     await fetch(MCP_URL, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json, text/event-stream',
-                            'Mcp-Session-Id': sessionId
+                            'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
                             jsonrpc: '2.0',
-                            method: 'notifications/initialized',
-                            params: {}
+                            method: 'initialized'
                         })
                     });
                     
@@ -310,11 +304,11 @@
                     appendToTerminal('system', 'Type your commands or questions below. Claude Code will help you with coding tasks.');
                     appendToTerminal('system', '');
                 } else {
-                    throw new Error('Failed to get session ID');
+                    throw new Error('Failed to initialize');
                 }
             } catch (error) {
                 console.error('Connection error:', error);
-                updateStatus('Connection Failed', false);
+                updateStatus('Failed to connect', false);
                 appendToTerminal('error', `Failed to connect: ${error.message}`);
             }
         }
@@ -363,9 +357,7 @@
                 const response = await fetch(MCP_URL, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json, text/event-stream',
-                        'Mcp-Session-Id': sessionId
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         jsonrpc: '2.0',
