@@ -3,6 +3,10 @@
     "multi-tools": {
       "command": "python",
       "args": ["weather_mcp.py"]
+    },
+    "scrimba-tools": {
+      "command": "python",
+      "args": ["custom-tool/scrimba_mcp.py"]
     }
   }
 }
