@@ -74,6 +74,75 @@ TUTORIALS = {
                 "hint": "const [text, setText] = useState('')"
             }
         ]
+    },
+    "variables_comprehensive": {
+        "title": "Variables in Programming - Complete Guide",
+        "steps": [
+            {
+                "step": 1,
+                "title": "What are Variables? - The Container Analogy",
+                "explanation": "Think of variables as labeled boxes or containers that store values. Just like you might have a box labeled 'Books' that contains actual books, a variable has a name and contains data. In programming, we use variables to store information that we want to use later. The name acts as a label so we can find and use the stored value whenever we need it.",
+                "code": "// Variables are like labeled containers\nlet studentName = 'Alice';        // A box labeled 'studentName' containing 'Alice'\nlet studentAge = 20;              // A box labeled 'studentAge' containing 20\nlet isStudent = true;             // A box labeled 'isStudent' containing true\n\nconsole.log(studentName);         // Look inside the 'studentName' box\nconsole.log(`${studentName} is ${studentAge} years old`);\n\n// We can change what's in the box\nstudentAge = 21;                  // Put a new value in the box\nconsole.log(`Now ${studentName} is ${studentAge} years old`);",
+                "exercise": "Create three variables: one for your favorite color (string), one for your age (number), and one for whether you like pizza (boolean). Then print a sentence using all three variables.",
+                "hint": "Use let variableName = value; and template literals with ${variableName} for printing"
+            },
+            {
+                "step": 2,
+                "title": "Why Do We Need Variables? - The Power of Reusability",
+                "explanation": "Variables make our code reusable, readable, and maintainable. Instead of repeating the same value multiple times, we store it once and use it everywhere. This means if we need to change the value, we only change it in one place. Variables also make our code self-documenting - a variable named 'taxRate' is much clearer than seeing 0.08 scattered throughout code.",
+                "code": "// Without variables - hard to maintain and unclear\nconsole.log('Tax on $100: $' + (100 * 0.08));\nconsole.log('Tax on $200: $' + (200 * 0.08));\nconsole.log('Tax on $300: $' + (300 * 0.08));\n// What if tax rate changes? We'd have to update every 0.08!\n\n// With variables - clear, maintainable, reusable\nlet taxRate = 0.08;\nlet product1Price = 100;\nlet product2Price = 200;\nlet product3Price = 300;\n\nconsole.log(`Tax on $${product1Price}: $${product1Price * taxRate}`);\nconsole.log(`Tax on $${product2Price}: $${product2Price * taxRate}`);\nconsole.log(`Tax on $${product3Price}: $${product3Price * taxRate}`);\n// To change tax rate, just change one line: taxRate = 0.09;",
+                "exercise": "Create a program that calculates the area of three different rectangles. Use variables for length, width, and store the formula (length * width) in a way that's reusable.",
+                "hint": "Create variables for each rectangle's dimensions, then calculate and display the areas using clear variable names"
+            },
+            {
+                "step": 3,
+                "title": "Variable Declaration and Initialization",
+                "explanation": "Declaration means creating a variable (giving it a name), while initialization means giving it its first value. In JavaScript, we can declare and initialize in one step, or separately. Different keywords (let, const, var) have different behaviors.",
+                "code": "// Declaration and initialization in one step\nlet userName = 'John';           // Declare and initialize\nconst PI = 3.14159;             // Declare and initialize a constant\n\n// Declaration without initialization (undefined)\nlet userAge;                    // Declared but not initialized\nconsole.log(userAge);           // undefined\n\n// Later initialization\nuserAge = 25;                   // Now it has a value\nconsole.log(userAge);           // 25\n\n// Multiple declarations\nlet firstName = 'Jane', lastName = 'Doe', age = 30;\n\n// Reassignment (changing the value)\nuserName = 'Jane';              // userName now contains 'Jane' instead of 'John'\n// PI = 3.14;                   // Error! Can't reassign const variables",
+                "exercise": "Declare a variable without initializing it, then assign it a value. Also create a constant for your birth year and try to change it (observe what happens).",
+                "hint": "Use let for variables you want to change, const for values that stay the same"
+            },
+            {
+                "step": 4,
+                "title": "Variable Naming Rules and Conventions",
+                "explanation": "Good variable names make code readable and maintainable. JavaScript has strict rules about what characters you can use, and the programming community has conventions that make code easier to understand. Use camelCase for variables, start with letters (not numbers), and choose descriptive names.",
+                "code": "// GOOD variable names (following conventions)\nlet firstName = 'Alice';         // camelCase for multi-word names\nlet userAge = 25;               // descriptive and clear\nlet isLoggedIn = false;         // boolean variables often start with 'is', 'has', 'can'\nlet MAX_RETRY_ATTEMPTS = 3;     // constants in UPPER_SNAKE_CASE\nlet shoppingCartItems = [];     // clear what it contains\n\n// BAD variable names (but technically valid)\nlet a = 'Alice';                // too short, not descriptive\nlet user_age = 25;              // snake_case (valid but not JavaScript convention)\nlet IsLoggedIn = false;         // PascalCase (reserved for classes/constructors)\nlet shopping_cart_items = [];   // inconsistent with JavaScript style\n\n// INVALID variable names (will cause errors)\n// let 2users = 10;             // can't start with number\n// let user-name = 'Bob';       // hyphens not allowed\n// let let = 'keyword';         // can't use reserved words\n// let user name = 'Bob';       // spaces not allowed",
+                "exercise": "Create variables for a simple user profile with good naming conventions: first name, last name, email address, age, and whether they have verified their email.",
+                "hint": "Use camelCase, make names descriptive, and use 'is' prefix for boolean values"
+            },
+            {
+                "step": 5,
+                "title": "Data Types - What Variables Can Hold",
+                "explanation": "Variables can store different types of data. The main primitive types in JavaScript are numbers, strings, booleans, null, and undefined. There are also complex types like arrays (lists) and objects (collections of key-value pairs). JavaScript is dynamically typed, meaning the same variable can hold different types of data at different times.",
+                "code": "// Primitive Data Types\nlet age = 25;                    // Number (integer)\nlet height = 5.9;               // Number (decimal/float)\nlet name = 'Alice';             // String (text)\nlet isStudent = true;           // Boolean (true/false)\nlet middleName = null;          // Null (intentionally empty)\nlet phoneNumber;                // Undefined (declared but not assigned)\n\n// Complex Data Types\nlet hobbies = ['reading', 'swimming', 'coding'];  // Array (list of items)\nlet person = {                  // Object (collection of properties)\n    firstName: 'Alice',\n    lastName: 'Johnson',\n    age: 25,\n    isStudent: true\n};\n\n// Checking types\nconsole.log(typeof age);        // 'number'\nconsole.log(typeof name);       // 'string'\nconsole.log(typeof isStudent);  // 'boolean'\nconsole.log(typeof hobbies);    // 'object' (arrays are objects in JS)\nconsole.log(typeof person);     // 'object'\n\n// Dynamic typing - same variable, different types\nlet dynamicVar = 42;            // starts as number\nconsole.log(typeof dynamicVar); // 'number'\ndynamicVar = 'Hello';           // now it's a string\nconsole.log(typeof dynamicVar); // 'string'",
+                "exercise": "Create variables of each data type: number, string, boolean, array with 3 items, and an object with at least 3 properties. Use typeof to check each one.",
+                "hint": "Remember: arrays use [], objects use {}, and typeof operator shows the data type"
+            },
+            {
+                "step": 6,
+                "title": "Variable Scope - Global vs Local",
+                "explanation": "Scope determines where in your code a variable can be accessed. Global variables can be used anywhere in your program, while local variables can only be used within the function or block where they're declared. Think of scope like rooms in a house - you can access things in your current room and shared areas (global), but not things locked in other rooms (other functions' local scope).",
+                "code": "// Global scope - accessible everywhere\nlet globalMessage = 'I am global!';\nconst GLOBAL_CONSTANT = 'Available everywhere';\n\nfunction demonstrateScope() {\n    // Local scope - only accessible within this function\n    let localMessage = 'I am local to this function';\n    \n    console.log(globalMessage);    // ✅ Can access global variables\n    console.log(localMessage);     // ✅ Can access local variables\n    \n    if (true) {\n        // Block scope - only accessible within this block\n        let blockMessage = 'I am local to this block';\n        console.log(globalMessage);  // ✅ Can access global\n        console.log(localMessage);   // ✅ Can access function scope\n        console.log(blockMessage);   // ✅ Can access block scope\n    }\n    \n    // console.log(blockMessage);  // ❌ Error! Can't access block scope here\n}\n\ndemstrateScope();\nconsole.log(globalMessage);      // ✅ Can access global\n// console.log(localMessage);    // ❌ Error! Can't access function scope\n// console.log(blockMessage);    // ❌ Error! Can't access block scope\n\n// Scope shadowing - local variable 'hides' global one with same name\nlet message = 'Global message';\n\nfunction shadowExample() {\n    let message = 'Local message';  // This 'shadows' the global message\n    console.log(message);           // Prints 'Local message'\n}\n\nshadowExample();\nconsole.log(message);               // Prints 'Global message'",
+                "exercise": "Create a global variable, then write a function that has a local variable with the same name. Also create a variable inside an if block and try to access it outside the block.",
+                "hint": "Use let for proper block scoping, and remember that variables declared inside {} are only accessible within those braces"
+            },
+            {
+                "step": 7,
+                "title": "Constants vs Variables - const vs let vs var",
+                "explanation": "JavaScript has three ways to declare variables: const (can't be reassigned), let (can be reassigned, block-scoped), and var (can be reassigned, function-scoped). Modern JavaScript prefers const for values that don't change and let for values that do change. Avoid var due to its confusing scoping behavior.",
+                "code": "// const - cannot be reassigned, must be initialized\nconst PI = 3.14159;             // ✅ Good for values that don't change\nconst users = ['Alice', 'Bob'];  // ✅ Array itself can't be reassigned...\nusers.push('Charlie');          // ✅ ...but we can modify its contents\nconsole.log(users);             // ['Alice', 'Bob', 'Charlie']\n// PI = 3.14;                   // ❌ Error! Cannot reassign const\n// const name;                  // ❌ Error! Must initialize const\n\n// let - can be reassigned, block-scoped\nlet counter = 0;                // ✅ Good for values that change\ncounter = 1;                    // ✅ Can reassign\ncounter++;                      // ✅ Can modify\n\nif (true) {\n    let blockVar = 'block';\n}\n// console.log(blockVar);       // ❌ Error! let is block-scoped\n\n// var - can be reassigned, function-scoped (avoid in modern JS)\nvar oldStyle = 'avoid this';    // ⚠️  Works but not recommended\nif (true) {\n    var leaks = 'I leak out';   // ⚠️  var ignores block scope\n}\nconsole.log(leaks);             // 'I leak out' - var leaked out of the block!\n\n// Best practices\nconst userName = 'Alice';       // Use const when value won't change\nlet userScore = 0;              // Use let when value will change\n// var anything;                // Don't use var in modern JavaScript\n\n// Hoisting behavior (advanced concept)\nconsole.log(hoistedVar);        // undefined (not an error, but confusing)\nvar hoistedVar = 'I am hoisted';\n\n// console.log(notHoisted);     // ❌ Error! let/const are not hoisted\n// let notHoisted = 'Better behavior';",
+                "exercise": "Create examples using const, let, and var. Try to reassign each one and observe the differences. Also try accessing a let variable before declaring it.",
+                "hint": "Use const for unchanging values, let for changing values, and see how var behaves differently with scope"
+            },
+            {
+                "step": 8,
+                "title": "Common Mistakes and Best Practices",
+                "explanation": "Avoid common pitfalls like using var, creating accidental globals, poor naming, and not understanding scope. Follow best practices: use const by default, let when you need to reassign, meaningful names, and be aware of scope. These habits will make your code more reliable and easier to maintain.",
+                "code": "// ❌ COMMON MISTAKES\n\n// 1. Accidental global variables (forgetting let/const)\nfunction badFunction() {\n    accidentalGlobal = 'Oops!';  // Creates global variable!\n}\n\n// 2. Using var instead of let/const\nfor (var i = 0; i < 3; i++) {\n    setTimeout(() => console.log('var:', i), 100);  // Prints 3, 3, 3\n}\n\n// 3. Poor variable names\nlet d = new Date();              // What does 'd' represent?\nlet temp = userData.name;        // 'temp' doesn't describe the content\nlet flag = user.isActive;        // 'flag' is too generic\n\n// 4. Not understanding const with objects\nconst user = { name: 'Alice' };\nuser = { name: 'Bob' };          // ❌ Error! Can't reassign\n\n// ✅ BEST PRACTICES\n\n// 1. Use proper declarations\nfunction goodFunction() {\n    const localVariable = 'Safe!';\n    return localVariable;\n}\n\n// 2. Use let for proper scoping\nfor (let i = 0; i < 3; i++) {\n    setTimeout(() => console.log('let:', i), 200);  // Prints 0, 1, 2\n}\n\n// 3. Meaningful variable names\nconst currentDate = new Date();\nconst userName = userData.name;\nconst isUserActive = user.isActive;\n\n// 4. Understand const with objects/arrays\nconst userProfile = { name: 'Alice' };\nuserProfile.name = 'Bob';        // ✅ Can modify properties\nuserProfile.age = 25;            // ✅ Can add properties\n\n// 5. Use const by default, let when needed\nconst API_URL = 'https://api.example.com';  // Won't change\nconst users = [];                            // Array won't be reassigned\nlet currentUserIndex = 0;                   // Will change\n\n// 6. Initialize variables when possible\nlet userInput = '';              // Better than let userInput;\nconst defaultSettings = {        // Clear initialization\n    theme: 'light',\n    language: 'en'\n};\n\n// 7. Group related variable declarations\nconst CONFIG = {\n    maxRetries: 3,\n    timeout: 5000,\n    baseUrl: 'https://api.example.com'\n};\n\nlet gameState = {\n    score: 0,\n    level: 1,\n    lives: 3\n};",
+                "exercise": "Fix this code by applying best practices: var x = 5; var y; function test() { z = 10; var a = x + y + z; return a; } Improve variable names, declarations, and scope handling.",
+                "hint": "Use const/let instead of var, give variables meaningful names, avoid global variables, and initialize properly"
+            }
+        ]
     }
 }
 
@@ -237,6 +306,16 @@ async def check_solution(
         },
         "react_hooks": {
             1: ["useState", "set"]
+        },
+        "variables_comprehensive": {
+            1: ["let", "=", "console.log"],
+            2: ["let", "*", "console.log"],
+            3: ["let", "const", "="],
+            4: ["let", "camelCase"],
+            5: ["let", "const", "typeof"],
+            6: ["let", "function", "console.log"],
+            7: ["const", "let", "var"],
+            8: ["const", "let"]
         }
     }
     

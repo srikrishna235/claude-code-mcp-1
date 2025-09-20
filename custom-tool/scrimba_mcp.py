@@ -144,6 +144,159 @@ async def previous() -> str:
     
     return await show_lesson(topic, current_step - 1)
 
+@mcp.tool()
+async def give_challenge(
+    difficulty: Optional[str] = "easy"
+) -> str:
+    """
+    Give a coding challenge to practice immediately.
+    
+    Args:
+        difficulty: "easy" (1 min), "medium" (2 min), or "hard" (3 min)
+    
+    Returns:
+        Challenge instructions with specific tasks
+    """
+    challenges = {
+        "easy": [
+            {
+                "task": "Create two variables:\n- firstName with your first name\n- lastName with your last name",
+                "time": "1 minute",
+                "hint": "let firstName = 'Your Name'"
+            },
+            {
+                "task": "Create a variable called age and set it to your age.\nThen create doubleAge that's twice your age.",
+                "time": "1 minute", 
+                "hint": "let age = 25; let doubleAge = age * 2"
+            }
+        ],
+        "medium": [
+            {
+                "task": "Write a function called greet that:\n1. Takes a name parameter\n2. Returns 'Hello ' + name\n3. Test it with console.log",
+                "time": "2 minutes",
+                "hint": "function greet(name) { return ... }"
+            },
+            {
+                "task": "Create an array of 3 favorite foods.\nThen add a 4th item using push().",
+                "time": "2 minutes",
+                "hint": "let foods = ['pizza', ...]; foods.push('...')"
+            }
+        ],
+        "hard": [
+            {
+                "task": "Build a counter:\n1. Variable count starting at 0\n2. Function increment() that adds 1\n3. Function save() that stores count in an array\n4. Test all functions",
+                "time": "3 minutes",
+                "hint": "let count = 0; let saves = []; function increment() { count += 1 }"
+            }
+        ]
+    }
+    
+    level_challenges = challenges.get(difficulty, challenges["easy"])
+    import random
+    challenge = random.choice(level_challenges)
+    
+    return f"""🎯 **CHALLENGE TIME!** ({difficulty.upper()})
+
+**Your mission ({challenge['time']}):**
+{challenge['task']}
+
+**Go ahead and do this RIGHT NOW!**
+Pause and try it yourself first.
+
+When done, I'll check your solution!
+Need help? Ask for a hint!
+
+Remember: The first time feels weird, but it becomes second nature! 💪"""
+
+@mcp.tool()
+async def check_code(
+    code: str
+) -> str:
+    """
+    Check user's code solution with encouraging Scrimba-style feedback.
+    
+    Args:
+        code: The user's code solution
+    
+    Returns:
+        Encouraging feedback with specific praise
+    """
+    # Basic checks for common patterns
+    feedback = []
+    
+    # Check for variables
+    if "let " in code or "const " in code or "var " in code:
+        feedback.append("✓ Great job creating variables!")
+    
+    # Check for functions
+    if "function" in code or "=>" in code:
+        feedback.append("✓ Awesome function work!")
+    
+    # Check for console.log
+    if "console.log" in code:
+        feedback.append("✓ YES! Console.log is your best friend!")
+    
+    # Check for arrays
+    if "[" in code and "]" in code:
+        feedback.append("✓ Nice array skills!")
+    
+    # Check for common mistakes
+    warnings = []
+    if "=" in code and not "==" in code and not "let" in code and not "const" in code:
+        warnings.append("💡 Oops! Super common mistake - did you forget 'let' or 'const'?")
+    
+    if "functoin" in code:
+        warnings.append("💡 Tiny typo: 'functoin' should be 'function' - happens to everyone!")
+    
+    # Build response
+    response = "🎉 **GREAT JOB!** You just wrote real code!\n\n"
+    
+    if feedback:
+        response += "What you did well:\n"
+        response += "\n".join(feedback) + "\n\n"
+    
+    if warnings:
+        response += "Quick fixes:\n"
+        response += "\n".join(warnings) + "\n\n"
+        response += "But that's totally okay - making mistakes is how we learn!\n\n"
+    
+    response += "**You're officially programming!** 🚀\n"
+    response += "Your JavaScript journey is really taking off!\n\n"
+    response += "Ready for another challenge? Just ask!"
+    
+    return response
+
+@mcp.tool()
+async def celebrate(
+    achievement: Optional[str] = "progress"
+) -> str:
+    """
+    Celebrate user's achievement with Scrimba-style enthusiasm.
+    
+    Args:
+        achievement: What to celebrate (e.g., "first_variable", "completed_lesson", "fixed_bug")
+    
+    Returns:
+        Enthusiastic celebration message
+    """
+    celebrations = {
+        "first_variable": "🎉 HUGE moment! You just created your FIRST variable! You're no longer like everyone else - you're a PROGRAMMER!",
+        "first_function": "🚀 This is MASSIVE! You just wrote a function! You can now create reusable code blocks!",
+        "completed_lesson": "💪 You CRUSHED it! Give yourself a pat on the back - that's a HUGE accomplishment!",
+        "fixed_bug": "🔧 YES! You just debugged code! That's what real developers do every day!",
+        "progress": "🌟 You're doing AMAZING! Your skills are becoming dangerous!",
+        "project": "🏆 INCREDIBLE! You built something REAL! This solves actual problems!"
+    }
+    
+    message = celebrations.get(achievement, celebrations["progress"])
+    
+    return f"""{message}
+
+Remember: The only way to learn how to code is to write a lot of code!
+And you're doing EXACTLY that!
+
+Keep going, buddy! 💪"""
+
 if __name__ == "__main__":
     import sys
     
