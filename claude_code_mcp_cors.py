@@ -44,11 +44,14 @@ async def claude_execute(
         allowed_tools: Comma-separated list of allowed tools (e.g., "Read,Write,Edit,Bash")
     
     Returns:
-        Claude Code's response
+        Claude Code's response with intermediate steps
     """
     try:
-        # Build command (without -p flag to show intermediate steps)
+        # Build command with stream-json output to capture intermediate steps
         cmd = [CLAUDE_CLI_PATH, prompt]
+        
+        # Add output format with verbose to capture all events
+        cmd.extend(["--output-format", "stream-json", "--verbose"])
         
         # Add allowed tools if specified
         if allowed_tools:
@@ -70,9 +73,46 @@ async def claude_execute(
             env={**os.environ}
         )
         
-        # Return output
+        # Parse the stream-json output to extract steps
         if result.returncode == 0:
-            return result.stdout.strip()
+            output_lines = result.stdout.strip().split('\n')
+            steps = []
+            final_response = ""
+            
+            for line in output_lines:
+                if line.strip():
+                    try:
+                        event = json.loads(line)
+                        event_type = event.get('type', '')
+                        
+                        # Capture different event types
+                        if event_type == 'tool_use':
+                            tool_name = event.get('name', 'unknown')
+                            steps.append(f"🔧 Using tool: {tool_name}")
+                        elif event_type == 'text':
+                            text = event.get('text', '').strip()
+                            if text:
+                                steps.append(f"💭 {text}")
+                        elif event_type == 'tool_result':
+                            steps.append(f"✅ Tool completed")
+                        elif event_type == 'completion':
+                            final_response = event.get('completion', '')
+                            
+                    except json.JSONDecodeError:
+                        # If not JSON, it might be regular output
+                        if line.strip():
+                            steps.append(line)
+            
+            # Format the response with steps
+            if steps:
+                response = "## Intermediate Steps:\n"
+                for i, step in enumerate(steps, 1):
+                    response += f"{i}. {step}\n"
+                response += "\n## Final Result:\n"
+                response += final_response or "Task completed"
+                return response
+            else:
+                return final_response or result.stdout.strip()
         else:
             return f"Error (exit {result.returncode}): {result.stderr or 'Unknown error'}"
             
