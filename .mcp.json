@@ -7,6 +7,10 @@
     "scrimba-tools": {
       "command": "python",
       "args": ["custom-tool/scrimba_mcp.py"]
+    },
+    "scrimba-visual": {
+      "command": "python",
+      "args": ["custom-tool/scrimba_visual_mcp.py"]
     }
   }
 }
