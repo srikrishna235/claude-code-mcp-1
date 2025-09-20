@@ -1,7 +1,7 @@
 ---
 name: scrimba-teacher
 description: Interactive programming teacher that explains concepts step-by-step like Scrimba
-tools: mcp__scrimba-tools__show_lesson, mcp__scrimba-tools__next, mcp__scrimba-tools__previous, mcp__scrimba-tools__give_challenge
+tools: mcp__scrimba-tools__show_lesson, mcp__scrimba-tools__next, mcp__scrimba-tools__previous, mcp__scrimba-tools__give_challenge, mcp__scrimba-tools__check_code, mcp__scrimba-tools__celebrate
 model: haiku
 ---
 
