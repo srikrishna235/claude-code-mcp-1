@@ -297,6 +297,184 @@ And you're doing EXACTLY that!
 
 Keep going, buddy! 💪"""
 
+# Progress tracking
+USER_PROGRESS = {
+    "concepts_learned": [],
+    "challenges_completed": 0,
+    "current_level": "beginner"
+}
+
+@mcp.tool()
+async def show_hint(
+    level: Optional[int] = 1
+) -> str:
+    """
+    Give progressive hints without revealing the full answer.
+    
+    Args:
+        level: Hint level (1=subtle, 2=clearer, 3=almost there)
+    
+    Returns:
+        Progressive hint based on level
+    """
+    if not CURRENT_LESSON["topic"]:
+        # Give generic hints for challenges
+        hints = {
+            1: "💡 Remember: Variables start with 'let' or 'const'...",
+            2: "💡 Try: let variableName = value",
+            3: "💡 Almost there! Example: let count = 0"
+        }
+    else:
+        # Context-aware hints based on current lesson
+        topic = CURRENT_LESSON["topic"]
+        if topic == "variables":
+            hints = {
+                1: "💡 Variables are like labeled boxes...",
+                2: "💡 Use 'let' to create a new variable",
+                3: "💡 Pattern: let name = 'value'"
+            }
+        elif topic == "loops":
+            hints = {
+                1: "💡 Loops repeat code multiple times...",
+                2: "💡 'for' loops: for(let i = 0; i < max; i++)",
+                3: "💡 Try: for(let i = 0; i < 3; i++) { console.log(i) }"
+            }
+        else:
+            hints = {
+                1: "💡 Think about what you're trying to store or do...",
+                2: "💡 Break it down into smaller steps",
+                3: "💡 Start with the simplest version"
+            }
+    
+    hint = hints.get(level, hints[1])
+    
+    return f"""{hint}
+
+{"Need more help? Ask for level 2 or 3 hint!" if level < 3 else "Give it your best shot! You've got this!"}
+
+Remember: It's totally okay to need hints - everyone does at first!"""
+
+@mcp.tool()
+async def track_progress() -> str:
+    """
+    Show user's learning progress with checkmarks.
+    
+    Returns:
+        Progress summary with achievements
+    """
+    # Update progress based on activities
+    if CURRENT_LESSON["topic"] and CURRENT_LESSON["topic"] not in USER_PROGRESS["concepts_learned"]:
+        USER_PROGRESS["concepts_learned"].append(CURRENT_LESSON["topic"])
+    
+    # Build progress report
+    report = "📊 **YOUR CODING JOURNEY**\n"
+    report += "=" * 40 + "\n\n"
+    
+    # Concepts learned
+    report += "**Concepts Mastered:**\n"
+    concepts = {
+        "variables": "✓ Variables - Store data",
+        "loops": "✓ Loops - Repeat code",
+        "functions": "✓ Functions - Reusable code",
+        "arrays": "✓ Arrays - Lists of items",
+        "objects": "✓ Objects - Complex data"
+    }
+    
+    for concept in USER_PROGRESS["concepts_learned"]:
+        if concept in concepts:
+            report += f"{concepts[concept]}\n"
+    
+    if not USER_PROGRESS["concepts_learned"]:
+        report += "Start your first lesson to begin!\n"
+    
+    report += f"\n**Challenges Completed:** {USER_PROGRESS['challenges_completed']}\n"
+    report += f"**Current Level:** {USER_PROGRESS['current_level'].title()}\n\n"
+    
+    # Motivational message
+    if USER_PROGRESS["challenges_completed"] > 5:
+        report += "🔥 You're on FIRE! Your skills are becoming dangerous!\n"
+    elif USER_PROGRESS["challenges_completed"] > 2:
+        report += "💪 You're making great progress! Keep coding!\n"
+    else:
+        report += "🚀 Your journey has just begun. Exciting times ahead!\n"
+    
+    report += "\nRemember: The only way to learn to code is to write a lot of code!"
+    
+    return report
+
+@mcp.tool()
+async def start_project(
+    project_name: Optional[str] = "passenger_counter"
+) -> str:
+    """
+    Start a real project with step-by-step guidance.
+    
+    Args:
+        project_name: "passenger_counter", "blackjack", or "chrome_extension"
+    
+    Returns:
+        Project setup and first steps
+    """
+    projects = {
+        "passenger_counter": {
+            "story": "When I was 19, I had to count people entering the subway. SO boring!",
+            "goal": "Build an app to count passengers",
+            "steps": [
+                "1. Create variable: let count = 0",
+                "2. Create function: increment()",  
+                "3. Add button in HTML",
+                "4. Connect button to function",
+                "5. Display count on page"
+            ],
+            "starter": """let count = 0
+
+function increment() {
+    // Add 1 to count
+    // Update the display
+}
+
+// Your turn! Fill in the function"""
+        },
+        "blackjack": {
+            "story": "I won 100 euros playing Blackjack in Prague!",
+            "goal": "Build a Blackjack game",
+            "steps": [
+                "1. Create variables for cards",
+                "2. Calculate sum function",
+                "3. Check for Blackjack",
+                "4. Draw new card function",
+                "5. Determine winner"
+            ],
+            "starter": """let firstCard = 11
+let secondCard = 10
+let sum = firstCard + secondCard
+
+// Create a function to check if you have Blackjack!"""
+        }
+    }
+    
+    project = projects.get(project_name, projects["passenger_counter"])
+    
+    return f"""🎯 **PROJECT TIME: {project_name.upper().replace('_', ' ')}**
+
+**Story:** {project['story']}
+Let's solve this with code!
+
+**Goal:** {project['goal']}
+
+**Steps:**
+{chr(10).join(project['steps'])}
+
+**Starter Code:**
+```javascript
+{project['starter']}
+```
+
+🚀 **YOUR MISSION:** Complete step 1 right now!
+This is a REAL project that solves an actual problem!
+
+Go ahead and code! When stuck, ask for hints!"""
+
 if __name__ == "__main__":
     import sys
     
