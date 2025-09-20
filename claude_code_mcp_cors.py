@@ -28,6 +28,57 @@ if not CLAUDE_CLI_PATH:
 # Initialize MCP server
 mcp = FastMCP("claude-code")
 
+def extract_tool_detail(tool_name: str, tool_input: dict) -> str:
+    """Extract the most informative detail from tool input."""
+    
+    # Priority list of parameter names to look for
+    priority_params = [
+        'description',  # Most descriptive
+        'command',      # For Bash
+        'prompt',       # For Task, WebSearch
+        'query',        # For search tools
+        'file_path',    # For file operations
+        'path',         # Alternative file path
+        'pattern',      # For Grep, Glob
+        'old_string',   # For Edit
+        'content',      # For Write
+        'url',          # For web tools
+        'name',         # Generic name
+        'todos',        # For TodoWrite
+        'edits',        # For MultiEdit
+    ]
+    
+    # Check priority params first
+    for param in priority_params:
+        if param in tool_input:
+            value = tool_input[param]
+            
+            # Handle special cases
+            if param == 'todos' and isinstance(value, list):
+                return f"{len(value)} todos"
+            elif param == 'edits' and isinstance(value, list):
+                return f"{len(value)} edits"
+            elif isinstance(value, str) and value:
+                # Truncate if too long
+                if len(value) > 80:
+                    return value[:77] + "..."
+                return value
+            elif isinstance(value, (int, float, bool)):
+                return str(value)
+    
+    # Fallback: find any string value
+    for key, value in tool_input.items():
+        if isinstance(value, str) and value and key not in ['new_string']:
+            if len(value) > 80:
+                return value[:77] + "..."
+            return value
+    
+    # Last resort: show param count
+    if tool_input:
+        return f"{len(tool_input)} params"
+    
+    return ""
+
 # Phase 1: Single tool that wraps Claude Code CLI
 @mcp.tool()
 async def claude_execute(
@@ -79,40 +130,112 @@ async def claude_execute(
             steps = []
             final_response = ""
             
+            # Tool emoji mapping for known tools
+            tool_emojis = {
+                'Write': '📝', 'Read': '👁️', 'Edit': '✏️', 'MultiEdit': '✏️',
+                'Bash': '🖥️', 'Grep': '🔍', 'Glob': '📂', 'LS': '📁',
+                'Task': '🤖', 'WebSearch': '🌐', 'WebFetch': '🌐',
+                'TodoWrite': '✅', 'NotebookEdit': '📓', 'ExitPlanMode': '📋',
+                'BashOutput': '📟', 'KillBash': '🛑'
+            }
+            
             for line in output_lines:
                 if line.strip():
                     try:
                         event = json.loads(line)
                         event_type = event.get('type', '')
                         
-                        # Capture different event types
-                        if event_type == 'tool_use':
-                            tool_name = event.get('name', 'unknown')
-                            steps.append(f"🔧 Using tool: {tool_name}")
-                        elif event_type == 'text':
-                            text = event.get('text', '').strip()
-                            if text:
-                                steps.append(f"💭 {text}")
-                        elif event_type == 'tool_result':
-                            steps.append(f"✅ Tool completed")
-                        elif event_type == 'completion':
-                            final_response = event.get('completion', '')
+                        if event_type == 'assistant':
+                            message = event.get('message', {})
+                            content = message.get('content', [])
+                            
+                            for item in content:
+                                if item.get('type') == 'text':
+                                    text = item.get('text', '').strip()
+                                    if text:
+                                        # Break long text into chunks
+                                        if len(text) > 200:
+                                            text = text[:197] + "..."
+                                        steps.append(f"💭 {text}")
+                                        
+                                elif item.get('type') == 'tool_use':
+                                    tool_name = item.get('name', 'unknown')
+                                    tool_input = item.get('input', {})
+                                    
+                                    # Get emoji for tool
+                                    emoji = tool_emojis.get(tool_name, '🔧')
+                                    
+                                    # Extract most informative detail from input
+                                    detail = extract_tool_detail(tool_name, tool_input)
+                                    
+                                    if detail:
+                                        steps.append(f"{emoji} {tool_name}: {detail}")
+                                    else:
+                                        steps.append(f"{emoji} {tool_name}")
+                                        
+                        elif event_type == 'user':
+                            # Tool results
+                            message = event.get('message', {})
+                            content = message.get('content', [])
+                            
+                            for item in content:
+                                if item.get('type') == 'tool_result':
+                                    result_content = item.get('content', '')
+                                    is_error = item.get('is_error', False)
+                                    
+                                    if isinstance(result_content, str) and result_content:
+                                        # Clean up common prefixes
+                                        result_content = result_content.replace('File created successfully at: ', '')
+                                        result_content = result_content.replace('The file ', '')
+                                        result_content = result_content.replace(' has been updated', ' updated')
+                                        
+                                        # Truncate but show more for errors
+                                        max_len = 150 if is_error else 100
+                                        if len(result_content) > max_len:
+                                            result_content = result_content[:max_len-3] + "..."
+                                        
+                                        icon = "❌" if is_error else "✅"
+                                        steps.append(f"{icon} {result_content}")
+                                        
+                        elif event_type == 'result':
+                            # Final result
+                            final_response = event.get('result', '')
+                            
+                        elif event_type == 'system':
+                            # System initialization info
+                            subtype = event.get('subtype', '')
+                            if subtype == 'init':
+                                cwd = event.get('cwd', '')
+                                if cwd:
+                                    # Shorten path if too long
+                                    if len(cwd) > 50:
+                                        parts = cwd.split('/')
+                                        if len(parts) > 4:
+                                            cwd = '/'.join(parts[:2]) + '/.../' + '/'.join(parts[-2:])
+                                    steps.append(f"📁 Working in: {cwd}")
                             
                     except json.JSONDecodeError:
-                        # If not JSON, it might be regular output
-                        if line.strip():
-                            steps.append(line)
+                        # Keep non-JSON lines if they look important
+                        line = line.strip()
+                        if line and not line.startswith('{') and not line == '':
+                            if len(line) > 100:
+                                line = line[:97] + "..."
+                            steps.append(f"ℹ️ {line}")
             
-            # Format the response with steps
+            # Format the response
             if steps:
-                response = "## Intermediate Steps:\n"
-                for i, step in enumerate(steps, 1):
-                    response += f"{i}. {step}\n"
-                response += "\n## Final Result:\n"
-                response += final_response or "Task completed"
+                response = "### Steps Taken:\n\n"
+                for step in steps:
+                    response += f"• {step}\n"
+                    
+                if final_response:
+                    response += f"\n### Result:\n{final_response}"
+                    
                 return response
             else:
-                return final_response or result.stdout.strip()
+                # No steps parsed, return the final response or raw output
+                return final_response or result.stdout.strip() or "Task completed!"
+                
         else:
             return f"Error (exit {result.returncode}): {result.stderr or 'Unknown error'}"
             
