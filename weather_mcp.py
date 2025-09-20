@@ -217,18 +217,24 @@ async def run_server(host="127.0.0.1", port=8003):
 
 # Run the server
 if __name__ == "__main__":
-    print("Weather MCP Server")
-    print("==================")
-    print("Starting server on http://localhost:8003")
-    print("")
-    print("To connect with Claude Code:")
-    print('  claude mcp add weather "python weather_mcp.py"')
-    print("")
-    print("Available tools:")
-    print("  - get_temperature: Get current temperature for a city")
-    print("  - get_weather_forecast: Get multi-day forecast")
-    print("  - compare_weather: Compare weather between cities")
-    print("")
+    import sys
     
-    # Run the server
-    asyncio.run(run_server())
+    # Check if running in stdio mode (default for Claude MCP)
+    if "--http" in sys.argv:
+        # HTTP mode for direct testing
+        print("Weather MCP Server (HTTP Mode)")
+        print("==============================")
+        print("Starting server on http://localhost:8003")
+        print("")
+        print("Available tools:")
+        print("  - get_temperature: Get current temperature for a city")
+        print("  - get_weather_forecast: Get multi-day forecast")
+        print("  - compare_weather: Compare weather between cities")
+        print("")
+        
+        # Run HTTP server
+        asyncio.run(run_server())
+    else:
+        # STDIO mode for Claude Code integration
+        # This is what Claude Code expects when running as subprocess
+        mcp.run()  # Default is stdio transport

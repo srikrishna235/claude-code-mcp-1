@@ -84,7 +84,8 @@ def extract_tool_detail(tool_name: str, tool_input: dict) -> str:
 async def claude_execute(
     prompt: str,
     working_dir: Optional[str] = None,
-    allowed_tools: Optional[str] = None
+    allowed_tools: Optional[str] = None,
+    agent_mode: Optional[str] = None
 ) -> str:
     """
     Execute a task using Claude Code CLI's AI capabilities.
@@ -93,16 +94,34 @@ async def claude_execute(
         prompt: Natural language description of the task
         working_dir: Working directory for execution (optional)
         allowed_tools: Comma-separated list of allowed tools (e.g., "Read,Write,Edit,Bash")
+        agent_mode: Enable specialized agent behavior ("weather", "code-review", etc.)
     
     Returns:
         Claude Code's response with intermediate steps
     """
     try:
         # Build command with stream-json output to capture intermediate steps
-        cmd = [CLAUDE_CLI_PATH, prompt]
+        cmd = [CLAUDE_CLI_PATH, "-p", prompt]
         
         # Add output format with verbose to capture all events
         cmd.extend(["--output-format", "stream-json", "--verbose"])
+        
+        # Add a general capability-awareness prompt to help Claude use available tools effectively
+        general_prompt = """You have access to various specialized tools through MCP servers. 
+When appropriate, act as an expert in the relevant domain:
+- For weather queries: Use weather tools (get_temperature, get_weather_forecast, compare_weather) to provide comprehensive, practical advice
+- For code tasks: Apply best practices and thorough analysis
+- For research: Be comprehensive and cite sources
+
+Let the user's query guide your expertise level and approach."""
+        
+        # Only add system prompt if agent_mode is explicitly requested
+        if agent_mode == "weather":
+            weather_prompt = """You are a weather expert. Use weather tools to provide detailed analysis with practical advice."""
+            cmd.extend(["--append-system-prompt", weather_prompt])
+        elif agent_mode == "general":
+            cmd.extend(["--append-system-prompt", general_prompt])
+        # If no agent_mode specified, let Claude work naturally with available tools
         
         # Add allowed tools if specified
         if allowed_tools:

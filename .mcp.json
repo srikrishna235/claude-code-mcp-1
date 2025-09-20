@@ -1,0 +1,1 @@
+{"mcpServers":{"weather-tools":{"command":"python","args":["weather_mcp.py"]}}}
