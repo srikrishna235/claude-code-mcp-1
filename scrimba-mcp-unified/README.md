@@ -4,6 +4,13 @@
 
 A revolutionary teaching system implementing Per Borgen's Scrimba methodology, available as MCP servers for both Claude Desktop and Claude CLI.
 
+## 🚀 v1.1.0 - Agent-Router Update!
+
+**NEW!** `scrimba_agent` - Unified tool that embeds agent personalities and auto-routes requests!
+- Analyzes user intent automatically
+- Routes to visual, interactive, project, or challenge modes
+- No need for separate agents - everything in one tool!
+
 ## Architecture
 
 ```
@@ -11,9 +18,11 @@ A revolutionary teaching system implementing Per Borgen's Scrimba methodology, a
 │  Teaching MCP       │     │  CLI Wrapper MCP   │
 │  (Pure Logic)       │     │  (Agent Support)   │
 ├─────────────────────┤     ├────────────────────┤
-│ • teach()           │     │ • execute_with_    │
-│ • give_challenge()  │     │   agent()          │
-│ • check_code()      │     │ • list_agents()    │
+│ • scrimba_agent()   │     │ • execute_with_    │
+│   (NEW! v1.1.0)     │     │   agent()          │
+│ • teach()           │     │ • list_agents()    │
+│ • give_challenge()  │     │                    │
+│ • check_code()      │     │                    │
 │ • visualize()       │     │                    │
 │ • start_project()   │     │                    │
 └─────────────────────┘     └────────────────────┘

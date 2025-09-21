@@ -2,11 +2,19 @@
   "mcpServers": {
     "scrimba-teaching": {
       "command": "python",
-      "args": ["teaching-server/teaching_mcp.py"]
+      "args": ["servers/teaching/server.py"]
     },
-    "claude-cli-wrapper": {
+    "scrimba-visual": {
       "command": "python",
-      "args": ["cli-wrapper/cli_wrapper_mcp.py"]
+      "args": ["servers/visual/server.py"]
+    },
+    "scrimba-visual-code": {
+      "command": "python",
+      "args": ["servers/visual-code/server.py"]
+    },
+    "scrimba-projects": {
+      "command": "python",
+      "args": ["servers/projects/server.py"]
     }
   }
 }
