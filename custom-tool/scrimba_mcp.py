@@ -606,6 +606,264 @@ Type your code and show me! If you get stuck, ask for a hint!
 **This is not just practice - this solves REAL problems!**
 Let's GO buddy! Your first real project starts NOW! 🔥"""
 
+@mcp.tool()
+async def console_log_check(
+    code: str
+) -> str:
+    """
+    Console.log Driven Development - verify EVERYTHING with console.log
+    Following exact Scrimba examples
+    """
+    has_console = "console.log" in code
+    
+    if not has_console:
+        # Count variables/functions that need verification
+        needs_verification = []
+        if "let " in code or "const " in code:
+            needs_verification.append("variables")
+        if "function" in code:
+            needs_verification.append("functions")
+        if "=" in code:
+            needs_verification.append("assignments")
+            
+        return f"""Hey buddy! WAIT! Let's verify your code works! 
+
+**Console.log Driven Development** - The Scrimba Way:
+
+Step 1: You wrote code ✅
+Step 2: NOW VERIFY IT! Add console.log() 🔍
+Step 3: See the magic happen! 
+
+{f"I see you have {', '.join(needs_verification)} - let's CHECK them!" if needs_verification else ""}
+
+Add this after EVERY variable:
+```javascript
+let myAge = 25
+console.log(myAge)  // SEE it work!
+```
+
+This is how REAL developers code - verify EVERYTHING!
+Try again with console.log!"""
+    
+    # They have console.log - celebrate!
+    return f"""🎉 **PERFECT!** You're doing Console.log Driven Development!
+
+You wrote → You verified → You SAW it work!
+
+This is EXACTLY how I code:
+1. Write one line
+2. Console.log it
+3. Celebrate when it works!
+
+Your code is ALIVE and you can SEE it! 
+This is how you'll catch bugs INSTANTLY!
+
+Keep going - console.log EVERYTHING! It's your superpower! 💪"""
+
+@mcp.tool()
+async def learn_by_breaking(
+    concept: str
+) -> str:
+    """
+    Error-First Learning - intentionally break things to learn debugging
+    
+    Args:
+        concept: The concept to teach through errors
+    
+    Returns:
+        Broken code examples with guided fixes
+    """
+    error_examples = {
+        "variables": {
+            "title": "Let's BREAK variables on purpose!",
+            "examples": [
+                {
+                    "broken": "console.log(myName)\nlet myName = 'Per'",
+                    "error": "ReferenceError: myName is not defined",
+                    "explanation": "JavaScript reads TOP to BOTTOM! It doesn't know about myName yet!",
+                    "fix": "let myName = 'Per'\nconsole.log(myName)",
+                    "lesson": "ALWAYS declare before using!"
+                },
+                {
+                    "broken": "let my-name = 'Per'",
+                    "error": "SyntaxError: Unexpected token '-'",
+                    "explanation": "No hyphens in variable names! JavaScript thinks you're subtracting!",
+                    "fix": "let myName = 'Per'  // or my_name",
+                    "lesson": "Use camelCase or underscores!"
+                },
+                {
+                    "broken": "let name = Per",
+                    "error": "ReferenceError: Per is not defined",
+                    "explanation": "JavaScript thinks Per is a variable! Text needs quotes!",
+                    "fix": "let name = 'Per'",
+                    "lesson": "Strings ALWAYS need quotes!"
+                }
+            ]
+        },
+        "functions": {
+            "title": "Let's BREAK functions and FIX them!",
+            "examples": [
+                {
+                    "broken": "greet('Per')\nfunction greet(name) { return 'Hello ' + name }",
+                    "error": "ReferenceError: greet is not defined",
+                    "explanation": "You can't use a function before it exists!",
+                    "fix": "function greet(name) { return 'Hello ' + name }\ngreet('Per')",
+                    "lesson": "Define functions FIRST!"
+                },
+                {
+                    "broken": "function greet name { }",
+                    "error": "SyntaxError: Unexpected identifier",
+                    "explanation": "Functions need parentheses for parameters!",
+                    "fix": "function greet(name) { }",
+                    "lesson": "Always use () even if empty!"
+                }
+            ]
+        }
+    }
+    
+    if concept not in error_examples:
+        concept = "variables"  # Default
+    
+    examples = error_examples[concept]
+    result = f"""🔥 **ERROR-FIRST LEARNING** - {examples['title']}
+
+I'm going to show you BROKEN code on purpose!
+Why? Because debugging is a SUPERPOWER! 
+
+"""
+    
+    for i, ex in enumerate(examples['examples'], 1):
+        result += f"""
+**Break #{i}:**
+```javascript
+{ex['broken']}
+```
+
+💥 **Error:** `{ex['error']}`
+
+**What happened?** {ex['explanation']}
+
+**THE FIX:**
+```javascript
+{ex['fix']}
+```
+
+**LESSON:** {ex['lesson']}
+
+---"""
+    
+    result += """
+
+Remember: EVERY developer makes these mistakes!
+The difference? Now you know how to FIX them!
+
+Debugging isn't failure - it's LEARNING! 🚀"""
+    
+    return result
+
+@mcp.tool()
+async def progressive_challenge(
+    level: int = 1
+) -> str:
+    """
+    Progressive complexity - exactly 5 levels for every concept
+    
+    Args:
+        level: Current level (1-5)
+    
+    Returns:
+        Challenge for that exact level with CDD built in
+    """
+    levels = {
+        1: {
+            "title": "Level 1: Basic Declaration",
+            "time": "60 seconds",
+            "challenge": "let count = 0",
+            "verify": "console.log(count)",
+            "expected": "0",
+            "next": "We're starting simple - just storing data!"
+        },
+        2: {
+            "title": "Level 2: Reassignment", 
+            "time": "90 seconds",
+            "challenge": "count = count + 1",
+            "verify": "console.log(count)",
+            "expected": "1",
+            "next": "Now we're CHANGING data!"
+        },
+        3: {
+            "title": "Level 3: Shorthand",
+            "time": "60 seconds",
+            "challenge": "count += 1",
+            "verify": "console.log(count)",
+            "expected": "2",
+            "next": "Same thing, less typing!"
+        },
+        4: {
+            "title": "Level 4: Pro Syntax",
+            "time": "60 seconds",
+            "challenge": "count++",
+            "verify": "console.log(count)",
+            "expected": "3",
+            "next": "The PRO way to add 1!"
+        },
+        5: {
+            "title": "Level 5: BUILD THE APP!",
+            "time": "180 seconds",
+            "challenge": "Build the passenger counter!",
+            "project": """
+let count = 0
+
+function increment() {
+    count++
+    console.log(count)
+}
+
+// Test it!
+increment()  // 1
+increment()  // 2
+increment()  // 3""",
+            "next": "YOU'RE BUILDING REAL APPS!"
+        }
+    }
+    
+    current = levels[level]
+    
+    if level < 5:
+        return f"""⚡ **PROGRESSIVE CHALLENGE** - {current['title']}
+
+⏱️ Time: {current['time']}
+
+**Your mission:**
+```javascript
+{current['challenge']}
+{current['verify']}  // ALWAYS verify!
+```
+
+**Expected output:** `{current['expected']}`
+
+{current['next']}
+
+Type it out RIGHT NOW! Don't copy-paste!
+When done, show me your console output!"""
+    
+    else:  # Level 5 - Project time!
+        return f"""🚀 **{current['title']}**
+
+⏱️ Time: {current['time']}
+
+**Build this COMPLETE app:**
+```javascript
+{current['project']}
+```
+
+This is it! A REAL working counter!
+Just like I needed at the subway station!
+
+{current['next']}
+
+GO GO GO! Show me when it's working!"""
+
 if __name__ == "__main__":
     import sys
     
