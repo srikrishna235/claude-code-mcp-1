@@ -23,6 +23,22 @@
     "claude-cli-wrapper": {
       "command": "python",
       "args": ["scrimba-mcp-unified/cli-wrapper/cli_wrapper_mcp.py"]
+    },
+    "scrimba-teaching-v2": {
+      "command": "python",
+      "args": ["scrimba-mcp-unified/servers/teaching/server.py"]
+    },
+    "scrimba-visual-v2": {
+      "command": "python",
+      "args": ["scrimba-mcp-unified/servers/visual/server.py"]
+    },
+    "scrimba-visual-code-v2": {
+      "command": "python",
+      "args": ["scrimba-mcp-unified/servers/visual-code/server.py"]
+    },
+    "scrimba-projects-v2": {
+      "command": "python",
+      "args": ["scrimba-mcp-unified/servers/projects/server.py"]
     }
   }
 }
