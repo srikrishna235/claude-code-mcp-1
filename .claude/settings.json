@@ -1,0 +1,8 @@
+{
+  "enabledMcpjsonServers": [
+    "weather-tools",
+    "scrimba-visual"
+  ],
+  "enableAllProjectMcpServers": true,
+  "defaultAgent": "agent-orchestrator"
+}
