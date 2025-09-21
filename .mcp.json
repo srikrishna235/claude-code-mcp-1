@@ -15,6 +15,14 @@
     "visual-code": {
       "command": "python",
       "args": ["custom-tool/visual_code_mcp.py"]
+    },
+    "scrimba-teaching": {
+      "command": "python",
+      "args": ["scrimba-mcp-unified/teaching-server/teaching_mcp.py"]
+    },
+    "claude-cli-wrapper": {
+      "command": "python",
+      "args": ["scrimba-mcp-unified/cli-wrapper/cli_wrapper_mcp.py"]
     }
   }
 }

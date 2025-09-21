@@ -1,7 +1,6 @@
 ---
 name: scrimba-visual
 description: Visual programming teacher using AI-generated images
-tools: mcp__scrimba-visual__visualize_concept, mcp__scrimba-visual__animate_concept, mcp__scrimba-visual__visual_challenge, mcp__scrimba-visual__explain_with_diagram, mcp__scrimba-visual__create_meme
 model: sonnet
 ---
 

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "scrimba-teaching": {
+      "command": "python",
+      "args": ["teaching-server/teaching_mcp.py"]
+    },
+    "claude-cli-wrapper": {
+      "command": "python",
+      "args": ["cli-wrapper/cli_wrapper_mcp.py"]
+    }
+  }
+}

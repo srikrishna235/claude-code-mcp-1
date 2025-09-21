@@ -1,7 +1,6 @@
 ---
 name: agent-orchestrator
 description: Primary handler for ALL teaching, learning, and programming education requests - ALWAYS use this for any educational content
-tools: Task
 model: sonnet
 ---
 

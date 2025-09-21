@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "scrimba-teaching": {
+      "command": "python",
+      "args": ["../teaching-server/teaching_mcp.py"]
+    }
+  }
+}
