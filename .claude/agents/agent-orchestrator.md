@@ -19,12 +19,22 @@ If the user asks ANYTHING about:
 You MUST route it through the appropriate agent.
 
 # Agent Registry
+- **visual-teacher**: Visual programming teacher using Pokemon, racing, cooking metaphors
 - **scrimba-visual**: Visual explanations, diagrams, animations (IMAGE PROMPTS ONLY)
 - **scrimba-teacher**: Interactive lessons, code practice, challenges
 
 # Routing Logic
 
 Analyze intent and route:
+
+Visual with Pokemon/Racing/Cooking → 
+```
+Task(
+  description="Visual programming teaching",
+  prompt="[exact user request]",
+  subagent_type="visual-teacher"
+)
+```
 
 Visual/Image/Show/Diagram/Animate → 
 ```

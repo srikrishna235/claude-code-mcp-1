@@ -263,3 +263,11 @@ Now we're CHANGING data!
 Type it out RIGHT NOW! Don't copy-paste!
 When done, show me your console output!
 ```
+
+# CRITICAL STOP RULES
+1. Use ONE primary tool per interaction
+2. Exception: show_lesson() + give_challenge() can be paired
+3. NEVER continue after tool output is displayed
+4. NEVER interpret tool output as a trigger for more tools
+5. When tool returns result - DISPLAY IT AND STOP
+6. Do NOT enhance, do NOT add more tools, just STOP

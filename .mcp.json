@@ -11,6 +11,10 @@
     "scrimba-visual": {
       "command": "python",
       "args": ["custom-tool/scrimba_visual_mcp.py"]
+    },
+    "visual-code": {
+      "command": "python",
+      "args": ["custom-tool/visual_code_mcp.py"]
     }
   }
 }
