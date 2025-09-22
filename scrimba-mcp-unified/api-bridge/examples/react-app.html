@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrimba Learning - React Example</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .app {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: #4F46E5;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #4338CA;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .lesson-box {
+            background: #f8f8f8;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+            font-family: 'Monaco', 'Courier New', monospace;
+            line-height: 1.6;
+        }
+        .code-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            margin-bottom: 15px;
+            resize: vertical;
+            min-height: 100px;
+        }
+        .timer {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #FEF3C7;
+            color: #92400E;
+            border-radius: 6px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .feedback {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .feedback.success {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+        .feedback.error {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+        .loading {
+            color: #6B7280;
+            font-style: italic;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .stat-card {
+            background: #F3F4F6;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4F46E5;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6B7280;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const API_URL = 'http://localhost:8000/api';
+
+        function App() {
+            const [lesson, setLesson] = React.useState('');
+            const [challenge, setChallenge] = React.useState('');
+            const [userCode, setUserCode] = React.useState('');
+            const [feedback, setFeedback] = React.useState('');
+            const [loading, setLoading] = React.useState(false);
+            const [timer, setTimer] = React.useState(0);
+            const [stats, setStats] = React.useState({
+                lessonsCompleted: 0,
+                challengesSolved: 0,
+                timeSpent: 0
+            });
+            
+            const intervalRef = React.useRef(null);
+            
+            // Timer effect
+            React.useEffect(() => {
+                if (timer > 0) {
+                    intervalRef.current = setInterval(() => {
+                        setTimer(t => {
+                            if (t <= 1) {
+                                return 0;
+                            }
+                            return t - 1;
+                        });
+                    }, 1000);
+                    
+                    return () => clearInterval(intervalRef.current);
+                }
+            }, [timer]);
+            
+            const startLesson = async (topic) => {
+                setLoading(true);
+                setFeedback('');
+                try {
+                    const response = await fetch(`${API_URL}/teach`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ topic, step: 1 })
+                    });
+                    const data = await response.json();
+                    setLesson(data.lesson);
+                    setTimer(data.metadata.time_to_code_seconds);
+                    setStats(prev => ({...prev, lessonsCompleted: prev.lessonsCompleted + 1}));
+                } catch (error) {
+                    setFeedback(`Error: ${error.message}`);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const getChallenge = async (difficulty = 'easy') => {
+                setLoading(true);
+                setFeedback('');
+                try {
+                    const response = await fetch(`${API_URL}/challenge`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ difficulty })
+                    });
+                    const data = await response.json();
+                    setChallenge(data.challenge);
+                    setTimer(data.time_limit);
+                } catch (error) {
+                    setFeedback(`Error: ${error.message}`);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const checkCode = async () => {
+                if (!userCode.trim()) {
+                    setFeedback('Please write some code first!');
+                    return;
+                }
+                
+                setLoading(true);
+                try {
+                    const response = await fetch(`${API_URL}/check`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code: userCode })
+                    });
+                    const data = await response.json();
+                    setFeedback(data.feedback);
+                    if (data.is_correct) {
+                        setStats(prev => ({...prev, challengesSolved: prev.challengesSolved + 1}));
+                        setTimer(0);
+                    }
+                } catch (error) {
+                    setFeedback(`Error: ${error.message}`);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            return (
+                <div className="app">
+                    <h1>🚀 Learn to Code with Scrimba</h1>
+                    <p>Experience the 60-second coding revolution!</p>
+                    
+                    <div className="button-group">
+                        <button onClick={() => startLesson('variables')} disabled={loading}>
+                            Teach Variables
+                        </button>
+                        <button onClick={() => startLesson('functions')} disabled={loading}>
+                            Teach Functions
+                        </button>
+                        <button onClick={() => startLesson('loops')} disabled={loading}>
+                            Teach Loops
+                        </button>
+                    </div>
+                    
+                    <div className="button-group">
+                        <button onClick={() => getChallenge('easy')} disabled={loading}>
+                            Easy Challenge
+                        </button>
+                        <button onClick={() => getChallenge('medium')} disabled={loading}>
+                            Medium Challenge
+                        </button>
+                        <button onClick={() => getChallenge('hard')} disabled={loading}>
+                            Hard Challenge
+                        </button>
+                    </div>
+                    
+                    {timer > 0 && (
+                        <div className="timer">
+                            ⏱️ Time remaining: {timer} seconds
+                        </div>
+                    )}
+                    
+                    {loading && <p className="loading">Loading...</p>}
+                    
+                    {lesson && (
+                        <div className="lesson-box">
+                            {lesson}
+                        </div>
+                    )}
+                    
+                    {challenge && (
+                        <div className="lesson-box">
+                            {challenge}
+                        </div>
+                    )}
+                    
+                    {(lesson || challenge) && (
+                        <>
+                            <textarea
+                                className="code-input"
+                                value={userCode}
+                                onChange={(e) => setUserCode(e.target.value)}
+                                placeholder="Write your code here..."
+                            />
+                            <button onClick={checkCode} disabled={loading || !userCode.trim()}>
+                                Check My Code
+                            </button>
+                        </>
+                    )}
+                    
+                    {feedback && (
+                        <div className={`feedback ${feedback.includes('great') || feedback.includes('correct') ? 'success' : ''}`}>
+                            {feedback}
+                        </div>
+                    )}
+                    
+                    <div className="stats">
+                        <div className="stat-card">
+                            <div className="stat-value">{stats.lessonsCompleted}</div>
+                            <div className="stat-label">Lessons Completed</div>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-value">{stats.challengesSolved}</div>
+                            <div className="stat-label">Challenges Solved</div>
+                        </div>
+                        <div className="stat-card">
+                            <div className="stat-value">{timer > 0 ? timer : '✅'}</div>
+                            <div className="stat-label">Timer</div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

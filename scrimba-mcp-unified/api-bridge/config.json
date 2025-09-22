@@ -1,0 +1,25 @@
+{
+  "servers": {
+    "basic": {
+      "description": "Basic hardcoded responses (fast)",
+      "module": "servers.teaching.server",
+      "functions": ["teach", "give_challenge", "check_code"]
+    },
+    "intelligent": {
+      "description": "Claude-powered dynamic responses (smart)",
+      "module": "servers.teaching.intelligent_server",  
+      "functions": ["teach", "give_challenge", "check_code", "adaptive_teach", "explain_error"]
+    },
+    "monolithic": {
+      "description": "Original monolithic server with scrimba_agent",
+      "command": "python -m scrimba_teaching_mcp",
+      "transport": "stdio"
+    }
+  },
+  "default": "intelligent",
+  "api_modes": {
+    "fast": "basic",
+    "smart": "intelligent",
+    "full": "monolithic"
+  }
+}
