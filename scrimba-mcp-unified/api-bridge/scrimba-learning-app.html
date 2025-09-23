@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrimba Learning - Powered by Claude</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .lesson-card {
+            grid-column: span 2;
+        }
+        
+        @media (max-width: 768px) {
+            .lesson-card {
+                grid-column: span 1;
+            }
+        }
+        
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .topic-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s;
+        }
+        
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .difficulty-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .lesson-content, .challenge-content {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .code-editor {
+            position: relative;
+        }
+        
+        .code-textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+        
+        .code-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .timer {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #333;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .timer.urgent {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            animation: pulse 0.5s infinite;
+        }
+        
+        .feedback {
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            animation: slideIn 0.3s;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .feedback.success {
+            background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+            color: #1e5128;
+        }
+        
+        .feedback.info {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: scale(1.05);
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            text-transform: uppercase;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .mode-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 25px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .mode-indicator.claude {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .mode-indicator.fallback {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #333;
+        }
+        
+        .claude-icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+        
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        
+        code {
+            font-family: 'Monaco', 'Courier New', monospace;
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        
+        .error-container {
+            background: #fff5f5;
+            border-left: 4px solid #ff6b6b;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .celebration {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5em;
+            animation: celebrate 1s;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        @keyframes celebrate {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.5) rotate(180deg); }
+            100% { transform: translate(-50%, -50%) scale(0) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const API_URL = 'http://localhost:8002';
+
+        function App() {
+            // State management
+            const [mode, setMode] = React.useState('unknown');
+            const [lesson, setLesson] = React.useState('');
+            const [challenge, setChallenge] = React.useState('');
+            const [userCode, setUserCode] = React.useState('');
+            const [feedback, setFeedback] = React.useState('');
+            const [loading, setLoading] = React.useState(false);
+            const [timer, setTimer] = React.useState(0);
+            const [currentTopic, setCurrentTopic] = React.useState('');
+            const [currentStep, setCurrentStep] = React.useState(1);
+            const [stats, setStats] = React.useState({
+                challengesCompleted: 0,
+                lessonsLearned: 0,
+                linesWritten: 0,
+                sessionTime: 0
+            });
+            const [celebration, setCelebration] = React.useState('');
+            const [error, setError] = React.useState('');
+            
+            const intervalRef = React.useRef(null);
+            const sessionStartRef = React.useRef(Date.now());
+            
+            // Check API health on mount
+            React.useEffect(() => {
+                checkApiHealth();
+                const sessionTimer = setInterval(() => {
+                    setStats(prev => ({
+                        ...prev,
+                        sessionTime: Math.floor((Date.now() - sessionStartRef.current) / 1000)
+                    }));
+                }, 1000);
+                
+                return () => clearInterval(sessionTimer);
+            }, []);
+            
+            // Timer effect
+            React.useEffect(() => {
+                if (timer > 0) {
+                    intervalRef.current = setInterval(() => {
+                        setTimer(t => {
+                            if (t <= 1) {
+                                return 0;
+                            }
+                            return t - 1;
+                        });
+                    }, 1000);
+                    
+                    return () => clearInterval(intervalRef.current);
+                }
+            }, [timer]);
+            
+            // API functions
+            const checkApiHealth = async () => {
+                try {
+                    const response = await fetch(`${API_URL}/`);
+                    const data = await response.json();
+                    setMode(data.claude_available ? 'claude' : 'fallback');
+                } catch (err) {
+                    setMode('offline');
+                    setError('Cannot connect to API. Please ensure the server is running.');
+                }
+            };
+            
+            const teach = async (topic, step = 1) => {
+                setLoading(true);
+                setError('');
+                setFeedback('');
+                setCurrentTopic(topic);
+                setCurrentStep(step);
+                
+                try {
+                    const response = await fetch(`${API_URL}/api/teach`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ topic, step })
+                    });
+                    
+                    const data = await response.json();
+                    setLesson(data.lesson);
+                    setTimer(60); // Start 60-second timer
+                    setStats(prev => ({
+                        ...prev,
+                        lessonsLearned: prev.lessonsLearned + 1
+                    }));
+                } catch (err) {
+                    setError(`Teaching error: ${err.message}`);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const getChallenge = async (difficulty = 'easy') => {
+                setLoading(true);
+                setError('');
+                setFeedback('');
+                
+                try {
+                    const response = await fetch(`${API_URL}/api/challenge`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            difficulty,
+                            topic: currentTopic || undefined
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    setChallenge(data.challenge);
+                    
+                    // Set timer based on difficulty
+                    const timers = { easy: 60, medium: 120, hard: 180 };
+                    setTimer(timers[difficulty]);
+                } catch (err) {
+                    setError(`Challenge error: ${err.message}`);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const checkCode = async () => {
+                if (!userCode.trim()) {
+                    setFeedback('Write some code first! The magic happens when you TYPE!');
+                    return;
+                }
+                
+                setLoading(true);
+                setError('');
+                
+                try {
+                    const response = await fetch(`${API_URL}/api/check`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            code: userCode,
+                            challenge: challenge ? 'Current challenge' : undefined
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    setFeedback(data.feedback);
+                    
+                    // Update stats
+                    setStats(prev => ({
+                        ...prev,
+                        linesWritten: prev.linesWritten + userCode.split('\n').length
+                    }));
+                    
+                    // Celebrate if correct
+                    if (data.metadata?.has_console_log) {
+                        celebrate('🎉');
+                    }
+                    
+                    // Stop timer if successful
+                    if (data.feedback.toLowerCase().includes('great') || 
+                        data.feedback.toLowerCase().includes('perfect')) {
+                        setTimer(0);
+                        setStats(prev => ({
+                            ...prev,
+                            challengesCompleted: prev.challengesCompleted + 1
+                        }));
+                        celebrate('🚀');
+                    }
+                } catch (err) {
+                    setError(`Check error: ${err.message}`);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const continueLesson = async () => {
+                setLoading(true);
+                setError('');
+                
+                try {
+                    const response = await fetch(`${API_URL}/api/continue`, {
+                        method: 'POST'
+                    });
+                    
+                    const data = await response.json();
+                    setLesson(data.next_lesson);
+                    setTimer(60);
+                } catch (err) {
+                    setError(`Continue error: ${err.message}`);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const explainError = async () => {
+                if (!error) return;
+                
+                setLoading(true);
+                
+                try {
+                    const response = await fetch(`${API_URL}/api/explain-error`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ error })
+                    });
+                    
+                    const data = await response.json();
+                    setFeedback(data.explanation);
+                } catch (err) {
+                    setFeedback('Error explaining error... how meta! Try again!');
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const adaptiveRequest = async (message) => {
+                setLoading(true);
+                setError('');
+                
+                try {
+                    const response = await fetch(`${API_URL}/api/adaptive`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message })
+                    });
+                    
+                    const data = await response.json();
+                    setLesson(data.response);
+                } catch (err) {
+                    setError(`Adaptive error: ${err.message}`);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            const celebrate = (emoji) => {
+                setCelebration(emoji);
+                setTimeout(() => setCelebration(''), 1000);
+            };
+            
+            const resetSession = async () => {
+                try {
+                    await fetch(`${API_URL}/api/reset`, { method: 'POST' });
+                    setLesson('');
+                    setChallenge('');
+                    setUserCode('');
+                    setFeedback('');
+                    setCurrentTopic('');
+                    setCurrentStep(1);
+                    setStats({
+                        challengesCompleted: 0,
+                        lessonsLearned: 0,
+                        linesWritten: 0,
+                        sessionTime: 0
+                    });
+                    sessionStartRef.current = Date.now();
+                } catch (err) {
+                    setError('Reset failed');
+                }
+            };
+            
+            // Format time
+            const formatTime = (seconds) => {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            };
+            
+            // Render
+            return (
+                <div className="app-container">
+                    {/* Mode Indicator */}
+                    <div className={`mode-indicator ${mode}`}>
+                        {mode === 'claude' ? '🧠 Claude Mode' : 
+                         mode === 'fallback' ? '⚡ Fallback Mode' : 
+                         '🔌 Offline'}
+                    </div>
+                    
+                    {/* Celebration */}
+                    {celebration && <div className="celebration">{celebration}</div>}
+                    
+                    {/* Header */}
+                    <div className="header">
+                        <h1>🚀 Scrimba Learning</h1>
+                        <p>Powered by Claude's Intelligence - Learn by Doing!</p>
+                    </div>
+                    
+                    {/* Error Display */}
+                    {error && (
+                        <div className="error-container">
+                            <strong>Error:</strong> {error}
+                            <button onClick={explainError} className="btn btn-secondary" style={{marginLeft: '10px'}}>
+                                Explain This Error
+                            </button>
+                        </div>
+                    )}
+                    
+                    <div className="main-grid">
+                        {/* Teaching Section */}
+                        <div className="card">
+                            <h2>📚 Learn Topics</h2>
+                            <div className="topic-buttons">
+                                <button onClick={() => teach('variables', 1)} className="btn btn-primary" disabled={loading}>
+                                    Variables
+                                </button>
+                                <button onClick={() => teach('functions', 1)} className="btn btn-primary" disabled={loading}>
+                                    Functions
+                                </button>
+                                <button onClick={() => teach('arrays', 1)} className="btn btn-primary" disabled={loading}>
+                                    Arrays
+                                </button>
+                                <button onClick={() => teach('loops', 1)} className="btn btn-primary" disabled={loading}>
+                                    Loops
+                                </button>
+                                <button onClick={() => teach('objects', 1)} className="btn btn-primary" disabled={loading}>
+                                    Objects
+                                </button>
+                            </div>
+                            
+                            {currentTopic && (
+                                <div style={{marginTop: '10px'}}>
+                                    <p>Learning: <strong>{currentTopic}</strong> (Level {currentStep}/5)</p>
+                                    <button 
+                                        onClick={() => teach(currentTopic, Math.min(currentStep + 1, 5))} 
+                                        className="btn btn-secondary"
+                                        disabled={loading || currentStep >= 5}
+                                        style={{marginTop: '10px'}}
+                                    >
+                                        Next Level →
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                        
+                        {/* Challenges Section */}
+                        <div className="card">
+                            <h2>⚡ Challenges</h2>
+                            <div className="difficulty-buttons">
+                                <button onClick={() => getChallenge('easy')} className="btn btn-success" disabled={loading}>
+                                    Easy (60s)
+                                </button>
+                                <button onClick={() => getChallenge('medium')} className="btn btn-warning" disabled={loading}>
+                                    Medium (120s)
+                                </button>
+                                <button onClick={() => getChallenge('hard')} className="btn btn-warning" disabled={loading}>
+                                    Hard (180s)
+                                </button>
+                            </div>
+                            
+                            <button onClick={continueLesson} className="btn btn-secondary" disabled={loading}>
+                                Continue Learning →
+                            </button>
+                        </div>
+                        
+                        {/* Lesson/Challenge Display */}
+                        {(lesson || challenge) && (
+                            <div className="card lesson-card">
+                                <h2>{lesson ? '📖 Lesson' : '🎯 Challenge'}</h2>
+                                
+                                {timer > 0 && (
+                                    <div className={`timer ${timer < 30 ? 'urgent' : ''}`}>
+                                        ⏰ {formatTime(timer)}
+                                    </div>
+                                )}
+                                
+                                {loading && <span className="loading"></span>}
+                                
+                                <div className={lesson ? 'lesson-content' : 'challenge-content'}>
+                                    {lesson || challenge}
+                                </div>
+                                
+                                <div className="code-editor">
+                                    <textarea
+                                        className="code-textarea"
+                                        value={userCode}
+                                        onChange={(e) => setUserCode(e.target.value)}
+                                        placeholder="// Write your code here... Remember: console.log() everything!"
+                                        spellCheck="false"
+                                    />
+                                    
+                                    <div style={{marginTop: '15px', display: 'flex', gap: '10px'}}>
+                                        <button 
+                                            onClick={checkCode} 
+                                            className="btn btn-success" 
+                                            disabled={loading || !userCode.trim()}
+                                        >
+                                            Check My Code 🚀
+                                        </button>
+                                        
+                                        <button 
+                                            onClick={() => setUserCode('')} 
+                                            className="btn btn-secondary"
+                                        >
+                                            Clear
+                                        </button>
+                                        
+                                        <button 
+                                            onClick={() => {
+                                                const msg = prompt('Ask anything about programming:');
+                                                if (msg) adaptiveRequest(msg);
+                                            }} 
+                                            className="btn btn-primary"
+                                        >
+                                            Ask Claude 🤖
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                {feedback && (
+                                    <div className={`feedback ${feedback.includes('great') || feedback.includes('perfect') ? 'success' : 'info'}`}>
+                                        {feedback}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        
+                        {/* Stats Section */}
+                        <div className="card" style={{gridColumn: 'span 2'}}>
+                            <h2>📊 Your Progress</h2>
+                            <div className="stats-grid">
+                                <div className="stat-card">
+                                    <div className="stat-value">{stats.lessonsLearned}</div>
+                                    <div className="stat-label">Lessons</div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-value">{stats.challengesCompleted}</div>
+                                    <div className="stat-label">Challenges</div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-value">{stats.linesWritten}</div>
+                                    <div className="stat-label">Lines Coded</div>
+                                </div>
+                                <div className="stat-card">
+                                    <div className="stat-value">{formatTime(stats.sessionTime)}</div>
+                                    <div className="stat-label">Time Coding</div>
+                                </div>
+                            </div>
+                            
+                            <button 
+                                onClick={resetSession} 
+                                className="btn btn-secondary" 
+                                style={{marginTop: '20px'}}
+                            >
+                                Reset Session
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        // Render app
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
