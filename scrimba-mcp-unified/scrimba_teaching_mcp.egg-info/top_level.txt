@@ -1,1 +1,1 @@
-scrimba_teaching_mcp
+scrimba_mcp_unified

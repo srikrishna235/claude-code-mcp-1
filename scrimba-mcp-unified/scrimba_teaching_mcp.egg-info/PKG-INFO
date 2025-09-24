@@ -1,23 +1,26 @@
 Metadata-Version: 2.4
 Name: scrimba-teaching-mcp
-Version: 2.0.0
-Summary: Interactive programming teacher using Scrimba's methodology for MCP
-Author: Scrimba Teaching System
-License: MIT
+Version: 3.0.0
+Summary: Unified MCP server for interactive programming education with Scrimba's revolutionary methodology
+Author: Scrimba Education Platform
+Author-email: dev@scrimba.com
+License-Expression: MIT
 Project-URL: Homepage, https://github.com/Skills03/claude-code-mcp
 Project-URL: Repository, https://github.com/Skills03/claude-code-mcp
 Project-URL: Documentation, https://github.com/Skills03/claude-code-mcp/blob/main/scrimba-mcp-unified/README.md
 Project-URL: Issues, https://github.com/Skills03/claude-code-mcp/issues
-Keywords: mcp,education,teaching,programming,scrimba,interactive-learning
-Classifier: Development Status :: 4 - Beta
+Keywords: mcp,education,teaching,programming,scrimba,interactive-learning,visualization,code-education,claude,ai-teaching
+Classifier: Development Status :: 5 - Production/Stable
 Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Education
 Classifier: Topic :: Education
-Classifier: License :: OSI Approved :: MIT License
+Classifier: Topic :: Software Development :: Libraries
 Classifier: Programming Language :: Python :: 3
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
 Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
 Requires-Python: >=3.8
 Description-Content-Type: text/markdown
 License-File: LICENSE

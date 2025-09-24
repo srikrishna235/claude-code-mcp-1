@@ -4,13 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scrimba-teaching-mcp"
-version = "2.0.0"
-description = "Interactive programming teacher using Scrimba's methodology for MCP"
+version = "3.0.0"
+description = "Unified MCP server for interactive programming education with Scrimba's revolutionary methodology"
 readme = "README.md"
 requires-python = ">=3.8"
-license = {text = "MIT"}
+license = "MIT"
 authors = [
-    {name = "Scrimba Teaching System"},
+    {name = "Scrimba Education Platform"},
+    {email = "dev@scrimba.com"}
 ]
 keywords = [
     "mcp",
@@ -18,18 +19,24 @@ keywords = [
     "teaching",
     "programming",
     "scrimba",
-    "interactive-learning"
+    "interactive-learning",
+    "visualization",
+    "code-education",
+    "claude",
+    "ai-teaching"
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
+    "Intended Audience :: Education",
     "Topic :: Education",
-    "License :: OSI Approved :: MIT License",
+    "Topic :: Software Development :: Libraries",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
     "fastmcp>=0.1.0",
@@ -42,8 +49,8 @@ Documentation = "https://github.com/Skills03/claude-code-mcp/blob/main/scrimba-m
 Issues = "https://github.com/Skills03/claude-code-mcp/issues"
 
 [project.scripts]
-scrimba-teaching-unified = "servers.teaching.server_unified:main"
+scrimba-mcp-unified = "scrimba_mcp_unified.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["scrimba_teaching_mcp*"]
+include = ["scrimba_mcp_unified*"]

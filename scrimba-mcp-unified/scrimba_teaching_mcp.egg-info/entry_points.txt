@@ -1,2 +1,2 @@
 [console_scripts]
-scrimba-teaching-unified = servers.teaching.server_unified:main
+scrimba-mcp-unified = scrimba_mcp_unified.__main__:main
