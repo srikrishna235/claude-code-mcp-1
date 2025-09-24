@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "claude-core": {
+      "command": "python",
+      "args": ["claude_code_mcp_final.py"],
+      "description": "Core Claude CLI wrapper for direct access"
+    },
+    "scrimba-teaching": {
+      "command": "python",
+      "args": ["servers/teaching/server_claude.py"],
+      "description": "Teaching server with Claude integration"
+    }
+  }
+}

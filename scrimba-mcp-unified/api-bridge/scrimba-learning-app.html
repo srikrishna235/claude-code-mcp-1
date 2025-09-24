@@ -394,6 +394,19 @@
             const intervalRef = React.useRef(null);
             const sessionStartRef = React.useRef(Date.now());
             
+            // User session management
+            const [userId] = React.useState(() => {
+                // Get existing userId or generate new one
+                let id = localStorage.getItem('userId');
+                if (!id) {
+                    id = crypto.randomUUID ? crypto.randomUUID() : 
+                         'user-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now();
+                    localStorage.setItem('userId', id);
+                }
+                console.log('User session ID:', id);
+                return id;
+            });
+            
             // Check API health on mount
             React.useEffect(() => {
                 checkApiHealth();
@@ -446,7 +459,7 @@
                     const response = await fetch(`${API_URL}/api/teach`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ topic, step })
+                        body: JSON.stringify({ topic, step, user_id: userId })
                     });
                     
                     const data = await response.json();
@@ -474,7 +487,8 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ 
                             difficulty,
-                            topic: currentTopic || undefined
+                            topic: currentTopic || undefined,
+                            user_id: userId
                         })
                     });
                     
@@ -506,7 +520,8 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ 
                             code: userCode,
-                            challenge: challenge ? 'Current challenge' : undefined
+                            challenge: challenge ? 'Current challenge' : undefined,
+                            user_id: userId
                         })
                     });
                     
@@ -547,7 +562,9 @@
                 
                 try {
                     const response = await fetch(`${API_URL}/api/continue`, {
-                        method: 'POST'
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: userId })
                     });
                     
                     const data = await response.json();
@@ -589,7 +606,7 @@
                     const response = await fetch(`${API_URL}/api/adaptive`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ message })
+                        body: JSON.stringify({ message, user_id: userId })
                     });
                     
                     const data = await response.json();
