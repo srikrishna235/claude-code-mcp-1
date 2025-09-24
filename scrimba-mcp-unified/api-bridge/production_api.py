@@ -85,19 +85,20 @@ RESPONSE FORMAT:
             logger.warning("Claude CLI not found, using fallback")
             return generate_fallback_response(prompt, system_context)
         
-        # Call Claude
+        # Call Claude with proper CLI syntax
+        full_prompt = f"{full_context}\n\nUser: {prompt}\n\nAssistant:"
+        
         process = await asyncio.create_subprocess_exec(
             "claude",
-            stdin=asyncio.subprocess.PIPE,
+            "-p", full_prompt,
+            "--dangerously-skip-permissions",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
         
-        full_prompt = f"{full_context}\n\nUser: {prompt}\n\nAssistant:"
-        
         try:
             stdout, stderr = await asyncio.wait_for(
-                process.communicate(input=full_prompt.encode()),
+                process.communicate(),
                 timeout=timeout
             )
         except asyncio.TimeoutError:

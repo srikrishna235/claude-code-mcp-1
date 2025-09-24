@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "scrimba-teaching": {
+      "command": "python",
+      "args": ["servers/teaching/server.py"]
+    },
+    "scrimba-visual": {
+      "command": "python",
+      "args": ["servers/visual/server.py"]
+    },
+    "scrimba-visual-code": {
+      "command": "python",
+      "args": ["servers/visual-code/server.py"]
+    },
+    "scrimba-projects": {
+      "command": "python",
+      "args": ["servers/projects/server.py"]
+    }
+  }
+}
