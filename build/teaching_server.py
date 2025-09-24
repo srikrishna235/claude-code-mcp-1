@@ -576,4 +576,4 @@ And buddy... you're doing EXACTLY that! Let's keep going! 💪"""
 
 # Run the server
 if __name__ == "__main__":
-    mcp.run()
+    mcp.run() 

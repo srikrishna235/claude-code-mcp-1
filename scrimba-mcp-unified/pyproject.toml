@@ -42,7 +42,7 @@ Documentation = "https://github.com/Skills03/claude-code-mcp/blob/main/scrimba-m
 Issues = "https://github.com/Skills03/claude-code-mcp/issues"
 
 [project.scripts]
-scrimba-teaching-server = "scrimba_teaching_mcp.__main__:main"
+scrimba-teaching-unified = "servers.teaching.server_unified:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

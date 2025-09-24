@@ -1,8 +1,12 @@
 {
   "mcpServers": {
-    "claude-core": {
+    "scrimba-teaching-unified": {
       "command": "python",
-      "args": ["claude_code_mcp_final.py"]
+      "args": [
+        "-m",
+        "servers.teaching.server_unified"
+      ],
+      "description": "Unified Scrimba Teaching MCP Server with all agents"
     }
   }
 }

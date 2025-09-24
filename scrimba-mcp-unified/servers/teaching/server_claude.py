@@ -231,12 +231,57 @@ Use Scrimba's encouraging tone. Keep it brief!"""
     return response
 
 if __name__ == "__main__":
-    import asyncio
+    import sys
     
-    print("=" * 60)
-    print("🚀 Scrimba Teaching MCP Server with Claude")
-    print("✅ Actually calls Claude CLI for responses")
-    print("=" * 60)
-    
-    # Run the server
-    asyncio.run(mcp.run())
+    if "--http" in sys.argv:
+        # HTTP mode for testing
+        import asyncio
+        import uvicorn
+        from starlette.applications import Starlette
+        from starlette.middleware.cors import CORSMiddleware
+        
+        async def run_http_server():
+            """Run as HTTP server for testing"""
+            app = Starlette()
+            app.add_middleware(
+                CORSMiddleware,
+                allow_origins=["*"],
+                allow_credentials=True,
+                allow_methods=["*"],
+                allow_headers=["*"],
+            )
+            
+            # Mount MCP app
+            mcp_app = mcp.streamable_http_app()
+            app.mount("/", mcp_app)
+            
+            print("=" * 60)
+            print("🚀 Scrimba Teaching MCP Server with Claude (HTTP Mode)")
+            print("✅ Actually calls Claude CLI for responses")
+            print("📍 Server: http://localhost:8007")
+            print("=" * 60)
+            print("Available tools:")
+            print("  - teach_concept: Teach programming concepts")
+            print("  - give_challenge: Create coding challenges")
+            print("  - check_code: Review user code")
+            print("  - next_lesson: Continue learning journey")
+            print("  - celebrate: Celebrate achievements")
+            print("  - show_hint: Give progressive hints")
+            print("=" * 60)
+            
+            # Run with session manager
+            async with mcp.session_manager.run():
+                config = uvicorn.Config(app, host="127.0.0.1", port=8007, log_level="info")
+                server = uvicorn.Server(config)
+                await server.serve()
+        
+        asyncio.run(run_http_server())
+    else:
+        # STDIO mode for Claude Desktop integration
+        print("=" * 60, file=sys.stderr)
+        print("🚀 Scrimba Teaching MCP Server with Claude (STDIO Mode)", file=sys.stderr)
+        print("✅ Actually calls Claude CLI for responses", file=sys.stderr)
+        print("=" * 60, file=sys.stderr)
+        
+        # Run in stdio mode (default for Claude Desktop)
+        mcp.run()  # This expects stdin/stdout communication

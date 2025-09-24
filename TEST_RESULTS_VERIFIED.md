@@ -122,7 +122,7 @@ asyncio.run(mcp.run())  # Returns None instead of coroutine
 "args": ["scrimba-mcp-unified/teaching-server/teaching_mcp.py"]
 // To:
 "args": ["scrimba-mcp-unified/api-bridge/production_api_session.py"]
-```
+```                                    
 
 ---
 
