@@ -1,0 +1,14 @@
+fastapi>=0.100.0
+uvicorn>=0.23.0
+sse-starlette>=1.6.0
+httpx>=0.24.0
+python-multipart>=0.0.6
+
+# For cloud deployments
+wrangler>=0.2.0  # Cloudflare
+vercel>=0.2.0    # Vercel  
+railway>=0.1.0   # Railway
+
+# For production
+mangum>=0.17.0   # AWS Lambda adapter
+gunicorn>=20.1.0

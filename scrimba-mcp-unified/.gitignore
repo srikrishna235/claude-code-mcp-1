@@ -47,4 +47,14 @@ env/
 
 # OS
 .DS_Store
-Thumbs.db
+Thumbs.db.mcpregistry_github_token
+.mcpregistry_registry_token
+*.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+dist/
+*.egg-info/
+build/
+*.so

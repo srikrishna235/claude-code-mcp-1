@@ -2,11 +2,11 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
   "name": "io.github.srikrishna235/scrimba-teaching-mcp",
   "description": "Unified MCP for Scrimba's interactive programming education with visual learning",
-  "version": "3.0.2",
+  "version": "3.0.4",
   "packages": [{
     "registryType": "pypi",
     "identifier": "scrimba-teaching-mcp",
-    "version": "3.0.2",
+    "version": "3.0.4",
     "transport": {
       "type": "stdio"
     }
