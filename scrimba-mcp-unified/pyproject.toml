@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "scrimba-teaching-mcp"
-version = "3.0.0"
+version = "3.0.1"
 description = "Unified MCP server for interactive programming education with Scrimba's revolutionary methodology"
 readme = "README.md"
 requires-python = ">=3.8"

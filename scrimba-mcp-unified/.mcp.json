@@ -6,7 +6,12 @@
         "-m",
         "servers.teaching.server_unified"
       ],
-      "description": "Unified Scrimba Teaching MCP Server with all agents"
+      "description": "Unified Scrimba Teaching MCP Server with all agents (local dev)"
+    },
+    "scrimba-teaching-mcp": {
+      "command": "scrimba-mcp-unified",
+      "args": [],
+      "description": "Published Scrimba Teaching MCP from PyPI (v3.0.1)"
     }
   }
 }

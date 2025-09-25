@@ -1,6 +1,6 @@
 # Scrimba Teaching MCP System
 
-<!-- mcp-name: io.github.Skills03/scrimba-teaching -->
+mcp-name: io.github.srikrishna235/scrimba-teaching-mcp
 
 A revolutionary teaching system implementing Per Borgen's Scrimba methodology, available as MCP servers for both Claude Desktop and Claude CLI.
 

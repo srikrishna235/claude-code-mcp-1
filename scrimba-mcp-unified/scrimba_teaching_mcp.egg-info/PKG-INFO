@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: scrimba-teaching-mcp
-Version: 3.0.0
+Version: 3.0.1
 Summary: Unified MCP server for interactive programming education with Scrimba's revolutionary methodology
 Author: Scrimba Education Platform
 Author-email: dev@scrimba.com
@@ -30,7 +30,7 @@ Dynamic: requires-python
 
 # Scrimba Teaching MCP System
 
-<!-- mcp-name: io.github.Skills03/scrimba-teaching -->
+mcp-name: io.github.srikrishna235/scrimba-teaching-mcp
 
 A revolutionary teaching system implementing Per Borgen's Scrimba methodology, available as MCP servers for both Claude Desktop and Claude CLI.
 
