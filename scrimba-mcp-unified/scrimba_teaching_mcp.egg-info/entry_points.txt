@@ -1,0 +1,2 @@
+[console_scripts]
+scrimba-mcp-unified = scrimba_mcp_unified.__main__:main
