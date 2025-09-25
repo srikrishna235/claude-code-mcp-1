@@ -32,10 +32,33 @@ async def root():
     return {"name": "Scrimba MCP Server", "version": "1.0.0", "protocol": "MCP"}
 
 @app.post("/mcp")
+@app.get("/mcp")
 async def mcp_endpoint(request: Request):
-    """Main MCP endpoint - handles JSON-RPC messages"""
+    """MCP endpoint - handles both GET (SSE) and POST (JSON-RPC)"""
     
-    # Check for SSE request
+    # Handle GET request for SSE stream
+    if request.method == "GET":
+        session_id = str(uuid.uuid4())
+        
+        async def event_stream():
+            # Send initial connection event
+            yield f"data: {json.dumps({'type': 'connection', 'status': 'connected'})}\n\n"
+            # Keep connection alive
+            while True:
+                await asyncio.sleep(30)
+                yield f"data: {json.dumps({'type': 'ping'})}\n\n"
+        
+        return StreamingResponse(
+            event_stream(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no"
+            }
+        )
+    
+    # Handle POST request
     accept_header = request.headers.get("accept", "")
     wants_sse = "text/event-stream" in accept_header
     
@@ -54,7 +77,7 @@ async def mcp_endpoint(request: Request):
             "jsonrpc": "2.0",
             "id": request_id,
             "result": {
-                "protocolVersion": "1.0.0",
+                "protocolVersion": "2024-11-05",
                 "serverInfo": {
                     "name": "scrimba-mcp",
                     "version": "1.0.0"
@@ -165,23 +188,6 @@ async def mcp_endpoint(request: Request):
             headers={"Mcp-Session-Id": session_id}
         )
 
-@app.get("/mcp")
-async def mcp_sse_endpoint(request: Request):
-    """SSE endpoint for server-initiated messages"""
-    session_id = request.headers.get("Mcp-Session-Id", str(uuid.uuid4()))
-    
-    async def event_generator():
-        """Generate SSE events"""
-        # Send keepalive
-        while True:
-            yield f"data: {json.dumps({'type': 'keepalive'})}\n\n"
-            await asyncio.sleep(30)
-    
-    return StreamingResponse(
-        event_generator(),
-        media_type="text/event-stream",
-        headers={"Mcp-Session-Id": session_id}
-    )
 
 if __name__ == "__main__":
     import uvicorn
